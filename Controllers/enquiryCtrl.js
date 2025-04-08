@@ -41,6 +41,7 @@ class enquiryController{
             return res.status(500).json({ error: error.message });
         }
     }
+    
 
     static async getAllEnquiry(req, res) {
         try {
@@ -55,7 +56,7 @@ class enquiryController{
         } catch (error) {
           return res.status(500).json({ error: error.message });
         }
-      }
+    }
     
 
 }

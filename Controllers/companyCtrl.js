@@ -47,7 +47,7 @@ class companyController{
           } else {
             console.log("❌ No image file uploaded.");
           }
-
+       
           
       
           const dataToSave = {

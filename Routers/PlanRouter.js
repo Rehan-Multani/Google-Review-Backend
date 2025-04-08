@@ -5,10 +5,10 @@ import { authMiddleware } from "../Middlewares/Auth.js";
 
 const router = express.Router();
 
-router.get("/plan", authMiddleware, PlanController.getallPlan);
-router.post("/plan", authMiddleware, PlanController.createPlan);
-router.put("/plan/:id", authMiddleware, PlanController.editPlan);
-router.put("/plan/:id", authMiddleware, PlanController.editPlan);
-router.delete("/plan/:id", authMiddleware, PlanController.deletePlan);
+router.get("/plan", PlanController.getallPlan);
+router.post("/plan", PlanController.createPlan);
+router.get("/getPlanById/:id", PlanController.getPlanById);
+router.put("/plan/:id", PlanController.editPlan);
+router.delete("/plan/:id", PlanController.deletePlan);
 
 export default router;

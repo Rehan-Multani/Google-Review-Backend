@@ -15,6 +15,19 @@ class BaseModel {
     console.log("rows",rows);
     return rows.length > 0 ? rows[0] : null;
   }
+
+  async getByGroupId(groupId) {
+    const [rows] = await db.query(
+      `SELECT u.*, g.group_name 
+       FROM ${this.tableName} u
+       JOIN groups g ON u.group_id = g.id
+       WHERE u.group_id = ?`,
+      [groupId]
+    );
+    return rows;
+  }
+  
+  
   
   async findEmail(email) {
     const [rows] = await db.query(`SELECT * FROM ${this.tableName} WHERE email = ?`, [email]);

@@ -10,8 +10,9 @@ class PlanController {
             if (result.length > 0) {
                 return res.status(200).json({
                     success: true,
-                    data: result,
                     message: "plans fetched successfully",
+                    data: result,
+                    
                 });
             } else {
                 return res.status(404).json({ message: "No plans found." });
@@ -20,6 +21,31 @@ class PlanController {
             return res.status(500).json({ error: error.message });
         }
     }
+
+    static async getPlanById(req, res) {
+        try {
+          const { id } = req.params;
+      
+          if (!id) {
+            return res.status(400).json({ error: "Plan ID is required." });
+          }
+      
+          const plan = await planTable.getById(id);
+      
+          if (!plan) {
+            return res.status(404).json({ message: "Plan not found." });
+          }
+      
+          return res.status(200).json({
+            success: true,
+            message: "Plan fetched successfully",
+            data: plan,
+          });
+        } catch (error) {
+          return res.status(500).json({ error: error.message });
+        }
+    }
+      
 
     static async createPlan(req, res) {
         try {
@@ -51,7 +77,7 @@ class PlanController {
                 free_trial_days,
                 plan_details,
                 price,
-                plan_id:generateOrderId()
+                order_id:generateOrderId()
             });
 
             return res.status(201).json({
@@ -109,24 +135,30 @@ class PlanController {
 
     static async deletePlan(req, res) {
         try {
-            const { id } = req.params;
-
-            if (!id) {
-                return res.status(400).json({ error: "plan ID is required." });
-            }
-            const [result] = await planTable.delete(id)
-
-            if (result.affectedRows > 0) {
-                return res.status(200).json({
-                    success: true,
-                    message: "plan deleted successfully",
-                })
-            }
-
+          const { id } = req.params;
+      
+          if (!id) {
+            return res.status(400).json({ error: "Plan ID is required." });
+          }
+      
+          const result = await planTable.delete(id); // ✅ no destructuring
+      
+          if (result.affectedRows > 0) {
+            return res.status(200).json({
+              success: true,
+              message: "Plan deleted successfully",
+            });
+          } else {
+            return res.status(404).json({
+              success: false,
+              message: "No plan found with this ID.",
+            });
+          }
         } catch (error) {
-            return res.status(500).json({ error: error.message });
+          return res.status(500).json({ error: error.message });
         }
-    }
+      }
+      
 
 }
 export default PlanController;

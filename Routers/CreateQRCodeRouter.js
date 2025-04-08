@@ -9,7 +9,7 @@ const router = express.Router();
 router.post("/qr-code",  QRCodeontroller.createQRCode);
 router.get("/qr-code", QRCodeontroller.getByQrcode);
 router.post("/business", QRCodeontroller.createBusiness);
-router.put("/qr-code/:id", authMiddleware, QRCodeontroller.editQRCode);
-router.delete("/qr-code/:id", authMiddleware, QRCodeontroller.deleteQRCode);
+router.put("/qr-code/:id", QRCodeontroller.editQRCode);
+router.delete("/qr-code/:id", QRCodeontroller.deleteQRCode);
 
 export default router;  
