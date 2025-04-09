@@ -9,6 +9,7 @@ router.post("/company",  companyController.createCompany);
 router.get("/getallCompany", companyController.getallCompany);
 // router.post("/business", QRCodeontroller.createBusiness);
 // router.put("/qr-code/:id", authMiddleware, QRCodeontroller.editQRCode);
-// router.delete("/qr-code/:id", authMiddleware, QRCodeontroller.deleteQRCode);
+router.delete("/deleteCompany/:id", companyController.deleteCompany);
+
 
 export default router;  

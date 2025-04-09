@@ -12,20 +12,19 @@ cloudinary.config({
 });
 
 
-
 class bannerController{
 
     static async createBanner(req, res) {
         try {
-          const { user_id } = req.body;
+          const { user_id, qr_code_id } = req.body;
       
           let imageUrl = "";
       
           if (req.files && req.files.image) {
             const imageFile = req.files.image;
       
-            console.log("✅ Image file found:", imageFile.name);
-            console.log("📂 tempFilePath:", imageFile.tempFilePath);
+            console.log("Image file found:", imageFile.name);
+            console.log("tempFilePath:", imageFile.tempFilePath);
       
             const uploadResult = await cloudinary.uploader.upload(
               imageFile.tempFilePath,
@@ -35,16 +34,17 @@ class bannerController{
               }
             );
       
-            console.log("✅ Cloudinary uploaded URL:", uploadResult.secure_url);
+            console.log("Cloudinary uploaded URL:", uploadResult.secure_url);
       
             imageUrl = uploadResult.secure_url;
           } else {
-            console.log("❌ No image file uploaded.");
+            console.log("No image file uploaded.");
           }
       
           const dataToSave = {
             user_id,
-            image: imageUrl  // ✅ Save to `image` column in DB
+            qr_code_id,
+            image: imageUrl  // Save to `image` column in DB
           };
       
           const resultData = await banner.create(dataToSave);
@@ -57,7 +57,7 @@ class bannerController{
           });
       
         } catch (error) {
-          console.log("❌ Error while creating banner:", error);
+          console.log("Error while creating banner:", error);
           return res.status(500).json({
             success: false,
             error: error.message || "Something went wrong"
@@ -105,7 +105,6 @@ class bannerController{
 
 
 }
-
 
 
 

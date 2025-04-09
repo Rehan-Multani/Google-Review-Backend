@@ -142,7 +142,7 @@ class QRCodeController {
          
         FROM qr_code q
         JOIN users u ON u.id = q.user_id
-        JOIN banner b ON b.id = q.id`
+        JOIN banner b ON b.qr_code_id = q.id`
       );
   
       if (!data || data.length === 0) {
@@ -165,8 +165,7 @@ class QRCodeController {
       });
     }
   }
-  
-  
+    
    
   static async editQRCode(req, res) {
     try {
@@ -215,6 +214,7 @@ class QRCodeController {
     }
   }
 
+
   static async deleteQRCode(req, res) {
     try {
       const { id } = req.params;
@@ -223,7 +223,7 @@ class QRCodeController {
         return res.status(400).json({ error: "QR code ID is required." });
       }
 
-      const [result] = await QRCodeable.delete(id);
+      const result = await QRCodeable.delete(id);
 
       if (result.affectedRows > 0) {
         return res.status(200).json({
@@ -239,6 +239,7 @@ class QRCodeController {
     }
   }
 
+  
   static async createBusiness(req, res) {
     try {
       const { google_business_id, qr_code_url, user_id } = req.body;
@@ -266,5 +267,7 @@ class QRCodeController {
   }
   
 }
+
+
 
 export default QRCodeController;

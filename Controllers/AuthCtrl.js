@@ -12,6 +12,7 @@ cloudinary.config({
 
 const userTable = new Controllers("users");
 const groupTable = new Controllers("groups");
+const companyTable = new Controllers("company");
 
 class UserController {
 
@@ -156,56 +157,134 @@ class UserController {
       res.status(500).json({ error: error.message });
     }
   }
+   
+  // old code
+  // static async loginUser(req, res) {
+  //   try {
+  //     const { email, password } = req.body;
 
+  //     if (!email || !password) {
+  //       return res.status(400).json({ error: "All fields are required." });
+  //     }
+
+  //     const existingUser = await userTable.findEmail(email);
+  //     if (!existingUser) {
+  //       return res.status(409).json({ message: "User not found with this email." });
+  //     }
+
+   
+
+  //     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+  //     if (!isPasswordValid) {
+  //       return res.status(401).json({ message: "Invalid password." });
+  //     }
+
+  //      // 🔒 Restrict login if group_id = 2 and status = 0
+  //      if (existingUser.group_id == 2 && existingUser.status == 0) {
+  //       return res.status(403).json({ message: "Your account is inactive. Please contact superadmin." });
+  //     }
+
+  //     const find_groupName = await groupTable.getById(existingUser.group_id)
+     
+  //     //const group_name=find_groupName.group_name
+  //     const group_name = find_groupName?.group_name || "";
+      
+      
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: "Login successful",
+  //       data: {
+  //         id: existingUser.id,
+  //         group_id:existingUser.group_id,
+  //         name: existingUser.name,
+  //         group_name,
+  //         email: existingUser.email,
+  //         phone: existingUser.phone,
+  //         image: existingUser.image,
+  //         token: generateToken(existingUser.id),
+  //       },
+  //     });
+
+
+  //   } catch (error) {
+  //     return res.status(500).json({ error: error.message });
+  //   }
+  // }
+
+
+  // new code 
 
   static async loginUser(req, res) {
     try {
       const { email, password } = req.body;
-
+  
       if (!email || !password) {
         return res.status(400).json({ error: "All fields are required." });
       }
-
+  
+      // 🔍 First, check in users table
       const existingUser = await userTable.findEmail(email);
-      if (!existingUser) {
-        return res.status(409).json({ message: "User not found with this email." });
-      }
-
-
-        // 🔒 Restrict login if group_id = 2 and status = 0
-      if (existingUser.group_id == 2 && existingUser.status == 0) {
+      if (existingUser) {
+        const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+        if (!isPasswordValid) {
+          return res.status(401).json({ message: "Invalid password." });
+        }
+  
+        // 🔒 Block inactive admin users
+        if (existingUser.group_id == 2 && existingUser.status == 0) {
           return res.status(403).json({ message: "Your account is inactive. Please contact superadmin." });
+        }
+  
+        const find_groupName = await groupTable.getById(existingUser.group_id);
+        const group_name = find_groupName?.group_name || "";
+  
+        return res.status(200).json({
+          success: true,
+          message: "Login successful",
+          data: {
+            id: existingUser.id,
+            group_id: existingUser.group_id,
+            name: existingUser.name,
+            group_name,
+            email: existingUser.email,
+            phone: existingUser.phone,
+            image: existingUser.image,
+            token: generateToken(existingUser.id),
+          },
+        });
+      } else {
+        // If not found in users table, check company table
+        const companyUser = await companyTable.findEmail(email);
+        if (!companyUser) {
+          return res.status(404).json({ message: "No account found with this email." });
+        }
+  
+        const isPasswordValid = await bcrypt.compare(password, companyUser.password);
+        if (!isPasswordValid) {
+          return res.status(401).json({ message: "Invalid password." });
+        }
+  
+        return res.status(200).json({
+          success: true,
+          message: "Login successful",
+          data: {
+            id: companyUser.id,
+            group_id: 3,
+            name: companyUser.business_name,
+            group_name: "Company",
+            email: companyUser.email,
+            phone: null,
+            image: companyUser.image,
+            token: generateToken(companyUser.id),
+          },
+        });
       }
-
-      const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-      if (!isPasswordValid) {
-        return res.status(401).json({ message: "Invalid password." });
-      }
-
-      const find_groupName = await groupTable.getById(existingUser.group_id)
-     
-      //const group_name=find_groupName.group_name
-      const group_name = find_groupName?.group_name || "";
-      
-      
-      return res.status(200).json({
-        success: true,
-        message: "Login successful",
-        data: {
-          id: existingUser.id,
-          group_id:existingUser.group_id,
-          name: existingUser.name,
-          group_name,
-          email: existingUser.email,
-          phone: existingUser.phone,
-          image: existingUser.image,
-          token: generateToken(existingUser.id),
-        },
-      });
     } catch (error) {
+      console.error("❌ Login Error:", error);
       return res.status(500).json({ error: error.message });
     }
   }
+     
 
   static async editUser(req, res) {
     try {
