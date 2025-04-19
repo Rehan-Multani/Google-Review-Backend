@@ -81,8 +81,6 @@ class UserController {
   }
   
 
-
-
   static async updateStatus(req, res) {
     try {
       const userId = req.params.id;
@@ -135,7 +133,6 @@ class UserController {
       }
 
 
-
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const result = await userTable.create({
@@ -158,61 +155,87 @@ class UserController {
     }
   }
    
-  // old code
+  
+  // old code 
+
   // static async loginUser(req, res) {
   //   try {
   //     const { email, password } = req.body;
-
+  
   //     if (!email || !password) {
   //       return res.status(400).json({ error: "All fields are required." });
   //     }
-
+  
+  //     // First, check in users table
   //     const existingUser = await userTable.findEmail(email);
-  //     if (!existingUser) {
-  //       return res.status(409).json({ message: "User not found with this email." });
+  //     if (existingUser) {
+  //       const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+  //       if (!isPasswordValid) {
+  //         return res.status(401).json({ message: "Invalid password." });
+  //       }
+  
+  //       // Block inactive admin users
+  //       if (existingUser.group_id == 2 && existingUser.status == 0) {
+  //         return res.status(403).json({ message: "Your account is inactive. Please contact superadmin." });
+  //       }
+  
+  //       const find_groupName = await groupTable.getById(existingUser.group_id);
+  //       const group_name = find_groupName?.group_name || "";
+        
+  
+  //       return res.status(200).json({
+  //         success: true,
+  //         message: "Login successful",
+  //         data: {
+  //           id: existingUser.id,
+  //           group_id: existingUser.group_id,
+  //           name: existingUser.name,
+  //           group_name,
+  //           email: existingUser.email,
+  //           phone: existingUser.phone,
+  //           image: existingUser.image,
+  //           token: generateToken(existingUser.id),
+  //         },
+  //       });
+  //     } else {
+  //       // If not found in users table, check company table
+  //       const companyUser = await companyTable.findEmail(email);
+  //       if (!companyUser) {
+  //         return res.status(409).json({ message: "No account found with this email." });
+  //       }
+  
+  //       const isPasswordValid = await bcrypt.compare(password, companyUser.password);
+  //       if (!isPasswordValid) {
+  //         return res.status(401).json({ message: "Invalid password." });
+  //       }
+  
+  //       return res.status(200).json({
+  //         success: true,
+  //         message: "Login successful",
+  //         data: {
+  //           id: companyUser.id,
+  //           group_id: 3,
+  //           name: companyUser.business_name,
+  //           group_name: "Company",
+  //           email: companyUser.email,
+  //           phone: null,
+  //           location: companyUser.location,
+  //           image: companyUser.image,
+  //           token: generateToken(companyUser.id),
+  //         },
+  //       });
   //     }
-
-   
-
-  //     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-  //     if (!isPasswordValid) {
-  //       return res.status(401).json({ message: "Invalid password." });
-  //     }
-
-  //      // 🔒 Restrict login if group_id = 2 and status = 0
-  //      if (existingUser.group_id == 2 && existingUser.status == 0) {
-  //       return res.status(403).json({ message: "Your account is inactive. Please contact superadmin." });
-  //     }
-
-  //     const find_groupName = await groupTable.getById(existingUser.group_id)
-     
-  //     //const group_name=find_groupName.group_name
-  //     const group_name = find_groupName?.group_name || "";
-      
-      
-  //     return res.status(200).json({
-  //       success: true,
-  //       message: "Login successful",
-  //       data: {
-  //         id: existingUser.id,
-  //         group_id:existingUser.group_id,
-  //         name: existingUser.name,
-  //         group_name,
-  //         email: existingUser.email,
-  //         phone: existingUser.phone,
-  //         image: existingUser.image,
-  //         token: generateToken(existingUser.id),
-  //       },
-  //     });
-
-
   //   } catch (error) {
+  //     console.error("Login Error:", error);
   //     return res.status(500).json({ error: error.message });
   //   }
+    
   // }
 
 
-  // new code 
+
+  // new code
+
 
   static async loginUser(req, res) {
     try {
@@ -222,17 +245,12 @@ class UserController {
         return res.status(400).json({ error: "All fields are required." });
       }
   
-      // 🔍 First, check in users table
+      // First, check in users table
       const existingUser = await userTable.findEmail(email);
       if (existingUser) {
         const isPasswordValid = await bcrypt.compare(password, existingUser.password);
         if (!isPasswordValid) {
           return res.status(401).json({ message: "Invalid password." });
-        }
-  
-        // 🔒 Block inactive admin users
-        if (existingUser.group_id == 2 && existingUser.status == 0) {
-          return res.status(403).json({ message: "Your account is inactive. Please contact superadmin." });
         }
   
         const find_groupName = await groupTable.getById(existingUser.group_id);
@@ -256,12 +274,17 @@ class UserController {
         // If not found in users table, check company table
         const companyUser = await companyTable.findEmail(email);
         if (!companyUser) {
-          return res.status(404).json({ message: "No account found with this email." });
+          return res.status(409).json({ message: "No account found with this email." });
         }
   
         const isPasswordValid = await bcrypt.compare(password, companyUser.password);
         if (!isPasswordValid) {
           return res.status(401).json({ message: "Invalid password." });
+        }
+  
+        // Check if company account is active (status == 1)
+        if (companyUser.status == 0) {
+          return res.status(403).json({ message: "Your company account is inactive. Please contact support." });
         }
   
         return res.status(200).json({
@@ -274,16 +297,20 @@ class UserController {
             group_name: "Company",
             email: companyUser.email,
             phone: null,
+            location: companyUser.location,
             image: companyUser.image,
             token: generateToken(companyUser.id),
           },
         });
       }
     } catch (error) {
-      console.error("❌ Login Error:", error);
+      console.error("Login Error:", error);
       return res.status(500).json({ error: error.message });
     }
   }
+  
+
+
      
 
   static async editUser(req, res) {
@@ -313,7 +340,7 @@ class UserController {
         updatedData.password = hashedPassword;
       }
 
-      // ✅ Cloudinary image upload
+      // Cloudinary image upload
       if (req.files && req.files.image) {
         const file = req.files.image;
         const cloudResult = await cloudinary.uploader.upload(file.tempFilePath);
@@ -339,19 +366,24 @@ class UserController {
   static async deleteUser(req, res) {
     try {
       const { id } = req.params;
-
+  
       if (!id) {
         return res.status(400).json({ error: "User ID is required." });
       }
-      const [result] = await userTable.delete(id)
-
+  
+      const result = await userTable.delete(id); // no destructuring
+  
       if (result.affectedRows > 0) {
         return res.status(200).json({
           success: true,
-          message: "User updated successfully",
-        })
+          message: "User deleted successfully",
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: "No user found with this ID.",
+        });
       }
-
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }

@@ -26,8 +26,7 @@ class BaseModel {
     );
     return rows;
   }
-  
-  
+    
   
   async findEmail(email) {
     const [rows] = await db.query(`SELECT * FROM ${this.tableName} WHERE email = ?`, [email]);
@@ -49,5 +48,9 @@ class BaseModel {
     return result;
   }
 }
+
+
+
+
 
 export default BaseModel

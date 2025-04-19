@@ -29,7 +29,7 @@ class QRCodeController {
       return res.status(500).json({ error: error.message });
     }
   }
-   //old code 
+  //old code 
   // static async createQRCode(req, res) {
   //   try {
   //     const {
@@ -67,20 +67,20 @@ class QRCodeController {
   // }
 
 
-  
+
   // new code
   static async createQRCode(req, res) {
     try {
-      const { user_id, url, headline, footer, size, qr_color } = req.body;
-  
+      const { user_id, url, headline, footer, size, qr_color, offer, place_id } = req.body;
+
       let imageUrl = "";
-  
+
       if (req.files && req.files.image) {
         const imageFile = req.files.image;
-  
-        console.log("✅ Image file found:", imageFile.name);
-        console.log("📂 tempFilePath:", imageFile.tempFilePath);
-  
+
+        console.log("Image file found:", imageFile.name);
+        console.log("tempFilePath:", imageFile.tempFilePath);
+
         const uploadResult = await cloudinary.uploader.upload(
           imageFile.tempFilePath,
           {
@@ -88,14 +88,14 @@ class QRCodeController {
             resource_type: "image"
           }
         );
-  
-        console.log("✅ Cloudinary uploaded URL:", uploadResult.secure_url);
-  
+
+        console.log("Cloudinary uploaded URL:", uploadResult.secure_url);
+
         imageUrl = uploadResult.secure_url;
       } else {
-        console.log("❌ No image file uploaded.");
+        console.log("No image file uploaded.");
       }
-  
+
       const dataToSave = {
         user_id,
         url,
@@ -103,18 +103,20 @@ class QRCodeController {
         footer,
         size,
         qr_color,
-        image: imageUrl  // ✅ Save to `image` column in DB
+        offer,
+        place_id,
+        image: imageUrl  // Save to `image` column in DB
       };
-  
+
       const resultData = await QRCodeable.create(dataToSave);
       const inserted = await QRCodeable.getById(resultData.insertId);
-  
+
       return res.status(201).json({
         success: true,
         message: "QR code created successfully",
         data: inserted
       });
-  
+
     } catch (error) {
       console.log("❌ Error while creating QR Code:", error);
       return res.status(500).json({
@@ -126,37 +128,37 @@ class QRCodeController {
 
   static async getByQrcode(req, res) {
     try {
-      const [data] = await db.query(
-        `SELECT 
-          q.id,
-          q.user_id,
-          q.url,
-          q.headline,
-          q.footer,
-          q.size,
-          q.qr_color,
-          q.created_at,
-          b.image, 
-          u.name, 
-          u.email
-         
-        FROM qr_code q
-        JOIN users u ON u.id = q.user_id
-        JOIN banner b ON b.qr_code_id = q.id`
+      const { user_id } = req.params; // Extract user_id from request params
+
+      // Fetch all company data matching the user_id from the qr_code table
+      const [companyData] = await db.query(
+        `SELECT * FROM qr_code WHERE id = ?`,
+        [user_id]  // The user_id is used to match company_id
       );
-  
-      if (!data || data.length === 0) {
+
+      if (companyData.length === 0) {
         return res.status(404).json({
           success: false,
-          message: "No QR codes found"
+          message: "No QR codes found for the specified user_id"
         });
       }
-  
+
+      // Fetch user data based on user_id
+      const [response] = await db.query(`SELECT first_name, last_name ,email FROM company WHERE id=?`, [user_id]);
+      console.log("response", response);
+
+      // Combine all companyData records with the user data
+      const combinedData = companyData.map(item => ({
+        ...item, // Spread the companyData to include all fields
+        name: ` ${response[0].first_name} ${response[0].last_name}`, // Add user name
+        email: response[0].email // Add user email
+      }));
+
       return res.status(200).json({
         success: true,
-        data
+        data: combinedData // Send the combined data for all records
       });
-  
+
     } catch (error) {
       console.error("❌ Error in getByQrcode:", error);
       return res.status(500).json({
@@ -165,8 +167,10 @@ class QRCodeController {
       });
     }
   }
-    
-   
+
+
+
+
   static async editQRCode(req, res) {
     try {
       const { id } = req.params;
@@ -209,6 +213,7 @@ class QRCodeController {
         success: true,
         message: "QR code updated successfully"
       });
+
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
@@ -239,23 +244,23 @@ class QRCodeController {
     }
   }
 
-  
+
   static async createBusiness(req, res) {
     try {
       const { google_business_id, qr_code_url, user_id } = req.body;
-  
+
       if (!google_business_id || !qr_code_url || !user_id) {
         return res.status(400).json({
           error: "google_business_id, qr_code_url, and user_id are required.",
         });
       }
-  
+
       const result = await QRCodeable.create({
         google_business_id,
         qr_code_url,
         user_id,
       });
-  
+
       return res.status(201).json({
         success: true,
         message: "Google Business QR code entry created successfully",
@@ -265,7 +270,7 @@ class QRCodeController {
       res.status(500).json({ error: error.message });
     }
   }
-  
+
 }
 
 
