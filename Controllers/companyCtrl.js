@@ -293,124 +293,138 @@ class companyController{
   // }
 
 
-  static async getCompanyDetails(req, res) {
-    try {
-      const { business_name, headline } = req.query;
+//   static async getCompanyDetails(req, res) {
+//     try {
+//       const { business_name, headline } = req.query;
   
-      // Step 1: Fetch all business names
-      const query = `SELECT business_name FROM company`;
-      const [businessNames] = await db.query(query);
+//       // Step 1: Fetch all business names
+//       const query = `SELECT business_name FROM company`;
+//       const [businessNames] = await db.query(query);
   
-      if (businessNames.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "No business names found."
-        });
-      }
+//       if (businessNames.length === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           message: "No business names found."
+//         });
+//       }
   
-      // If business_name is provided, proceed with fetching headlines and review data
-      if (business_name) {
-        // Fetch headlines for the given business_name
-        const query = `
-          SELECT q.headline, q.id as qr_code_id
-          FROM qr_code q
-          JOIN company c ON q.user_id = c.id
-          WHERE c.business_name = ?
-        `;
-        const [headlinesResult] = await db.query(query, [business_name]);
+//       // If business_name is provided, proceed with fetching headlines and review data
+//       if (business_name) {
+//         // Fetch headlines for the given business_name
+//         const query = `
+//           SELECT q.headline, q.id as qr_code_id
+//           FROM qr_code q
+//           JOIN company c ON q.user_id = c.id
+//           WHERE c.business_name = ?
+//         `;
+//         const [headlinesResult] = await db.query(query, [business_name]);
   
-        if (headlinesResult.length === 0) {
-          return res.status(404).json({
-            success: false,
-            message: "No headlines found for the provided business_name."
-          });
-        }
+//         if (headlinesResult.length === 0) {
+//           return res.status(404).json({
+//             success: false,
+//             message: "No headlines found for the provided business_name."
+//           });
+//         }
   
-        // If no headline is provided, return business data with available headlines
-        if (!headline) {
-          return res.status(200).json({
-            success: true,
-            message: "Business names fetched successfully",
-            data: {
-              businessNames,
-              headlines: headlinesResult // Return all available headlines for the business
-            }
-          });
-        }
+//         // If no headline is provided, return business data with available headlines
+//         if (!headline) {
+//           return res.status(200).json({
+//             success: true,
+//             message: "Business names fetched successfully",
+//             data: {
+//               businessNames,
+//               headlines: headlinesResult // Return all available headlines for the business
+//             }
+//           });
+//         }
   
-        // Find matching qr_code_id for the provided headline
-        const selectedQrCode = headlinesResult.find(item => item.headline === headline);
-        const qr_code_id = selectedQrCode ? selectedQrCode.qr_code_id : null;
+//         // Find matching qr_code_id for the provided headline
+//         const selectedQrCode = headlinesResult.find(item => item.headline === headline);
+//         const qr_code_id = selectedQrCode ? selectedQrCode.qr_code_id : null;
   
-        // If no matching headline, return error message and skip reviews
-        if (!qr_code_id) {
-          return res.status(404).json({
-            success: false,
-            message: "No matching QR code found for the selected headline."
-          });
-        }
+//         // If no matching headline, return error message and skip reviews
+//         if (!qr_code_id) {
+//           return res.status(404).json({
+//             success: false,
+//             message: "No matching QR code found for the selected headline."
+//           });
+//         }
   
-        // Fetch Total Reviews for the selected qr_code_id
-        const totalQuery = `
-          SELECT COUNT(*) AS total 
-          FROM review r
-          WHERE r.qr_code_id = ?
-        `;
-        const [totalResult] = await db.query(totalQuery, [qr_code_id]);
-        const totalReviews = totalResult[0].total;
+//         // Fetch Total Reviews for the selected qr_code_id
+//         const totalQuery = `
+//           SELECT COUNT(*) AS total 
+//           FROM review r
+//           WHERE r.qr_code_id = ?
+//         `;
+//         const [totalResult] = await db.query(totalQuery, [qr_code_id]);
+//         const totalReviews = totalResult[0].total;
   
-        // Fetch Average Rating for the selected qr_code_id
-        const avgQuery = `
-          SELECT AVG(r.rating) AS averageRating 
-          FROM review r
-          WHERE r.qr_code_id = ?
-        `;
-        const [avgResult] = await db.query(avgQuery, [qr_code_id]);
-        const averageRating = parseFloat(avgResult[0].averageRating || 0).toFixed(1);
+//         // Fetch Average Rating for the selected qr_code_id
+//         const avgQuery = `
+//           SELECT AVG(r.rating) AS averageRating 
+//           FROM review r
+//           WHERE r.qr_code_id = ?
+//         `;
+//         const [avgResult] = await db.query(avgQuery, [qr_code_id]);
+//         const averageRating = parseFloat(avgResult[0].averageRating || 0).toFixed(1);
   
-        // Fetch Latest 2 reviews for the selected qr_code_id
-        const allQuery = `
-          SELECT r.id, r.rating, r.feedback, r.created_at 
-          FROM review r
-          WHERE r.qr_code_id = ?
-          ORDER BY r.created_at DESC
-          LIMIT 2
-        `;
-        const [reviews] = await db.query(allQuery, [qr_code_id]);
+//         // Fetch Latest 2 reviews for the selected qr_code_id
+//         const allQuery = `
+//           SELECT r.id, r.rating, r.feedback, r.created_at 
+//           FROM review r
+//           WHERE r.qr_code_id = ?
+//           ORDER BY r.created_at DESC
+//           LIMIT 2
+//         `;
+//         const [reviews] = await db.query(allQuery, [qr_code_id]);
   
-        return res.status(200).json({
-          success: true,
-          message: "Headlines and review data fetched successfully.",
-          data: {
-            headlines: headlinesResult, // List of headlines
-            reviewData: {
-              headline: headline,
-              totalReviews,
-              averageRating,
-              reviews
-            }
-          }
-        });
-      }
+//         return res.status(200).json({
+//           success: true,
+//           message: "Headlines and review data fetched successfully.",
+//           data: {
+//             headlines: headlinesResult, // List of headlines
+//             reviewData: {
+//               headline: headline,
+//               totalReviews,
+//               averageRating,
+//               reviews
+//             }
+//           }
+//         });
+//       }
   
-      // Step 2: If no business_name provided, return all business names
-      return res.status(200).json({
-        success: true,
-        message: "Business names fetched successfully",
-        data: businessNames
-      });
+//       // Step 2: If no business_name provided, return all business names
+//       return res.status(200).json({
+//         success: true,
+//         message: "Business names fetched successfully",
+//         data: businessNames
+//       });
   
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: "An error occurred while fetching business names and review data.",
-        error: error.message
-      });
-    }
+//     } catch (error) {
+//       return res.status(500).json({
+//         success: false,
+//         message: "An error occurred while fetching business names and review data.",
+//         error: error.message
+//       });
+//     }
+// }
+
+
+
+static async getCompanyDetails(req, res) {
+
+
+
+  
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching business names and review data.",
+      error: error.message
+    });
+  }
 }
-
-
-
 
   
   
