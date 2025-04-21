@@ -6,21 +6,53 @@ class review_analysisController {
 
     static async getAllReviewAnalysis(req, res) {
         try {
-            const { business_id, branch_id } = req.query;
-            const [result] = await db.query("SELECT * FROM review_analysis WHERE user_id = ? AND qr_code_id= ? ", [business_id, branch_id])
-            if (result.length > 0) {
-                return res.status(200).json({
-                    success: true,
-                    message: "Review analysis fetched successfully",
-                    data: result,
-                });
-            } else {
-                return res.status(404).json({ message: "No review analysis found." });
-            }
+          const { business_id, branch_id, from_date, to_date } = req.query;
+      
+          if (!business_id || !branch_id) {
+            return res.status(400).json({ success: false, message: "Missing business_id or branch_id" });
+          }
+      
+          let dateCondition = "";
+          const params = [business_id, branch_id];
+      
+          if (from_date && to_date) {
+            dateCondition = "AND DATE(created_at) BETWEEN ? AND ?";
+            params.push(from_date, to_date);
+          }
+      
+          const [result] = await db.query(`
+            SELECT 
+              DATE_FORMAT(created_at, '%Y-%m') AS month,
+              SUM(CASE WHEN sentiment = 'positive' THEN 1 ELSE 0 END) AS positive,
+              SUM(CASE WHEN sentiment = 'negative' THEN 1 ELSE 0 END) AS negative,
+              SUM(CASE WHEN sentiment = 'neutral' THEN 1 ELSE 0 END) AS neutral
+            FROM 
+              review_analysis
+            WHERE 
+              user_id = ? AND qr_code_id = ?
+              ${dateCondition}
+            GROUP BY 
+              DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY
+              month DESC
+          `, params);
+      
+          if (result.length > 0) {
+            return res.status(200).json({
+              success: true,
+              message: "Monthly sentiment counts fetched successfully",
+              data: result,
+            });
+          } else {
+            return res.status(404).json({ success: false, message: "No sentiment data found." });
+          }
+      
         } catch (error) {
-            return res.status(500).json({ error: error.message });
+          return res.status(500).json({ success: false, error: error.message });
         }
-    }
+      }
+      
+      
 
     static async createReviewAnalysis(req, res) {
         try {
