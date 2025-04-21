@@ -28,7 +28,7 @@ const PORT = process.env.PORT || 3000;
 
 // ✅ CORS setup
 app.use(cors({
-  origin: "*", // Or restrict to specific domain
+  origin: "https://google-review-project.netlify.app/", // Or restrict to specific domain
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
