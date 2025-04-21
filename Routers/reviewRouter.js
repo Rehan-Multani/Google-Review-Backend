@@ -10,6 +10,7 @@ router.get("/getallReview", reviewController.getallReview);
 router.get("/getReviewById/:id", reviewController.getReviewById);
 router.get("/getReviewDetails", reviewController.getReviewDetails);
 router.get('/getDashboard', reviewController.getDashboard);
+router.get('/getCompanyDashboard', reviewController.getCompanyDashboard);
 
 
 
