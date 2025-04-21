@@ -14,6 +14,7 @@ router.delete("/deleteCompany/:id", companyController.deleteCompany);
 router.post("/updateCompanyStatus/:id", companyController.updateCompanyStatus);
 
 router.get("/getCompanyDetails", companyController.getCompanyDetails);
+router.get("/getCompanyDetailsforSentimentAnalytics", companyController.getCompanyDetailsforSentimentAnalytics);
 // router.get("/getCompanyHeadlineDetails", companyController.getCompanyHeadlineDetails);
 // router.get("/getReviewHeadline", companyController.getReviewHeadline);
 

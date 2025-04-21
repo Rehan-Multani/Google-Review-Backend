@@ -259,18 +259,84 @@ class companyController {
       });
     }
   }
-  
-  static async getsingle(req, res) {
+  static async getCompanyDetailsforSentimentAnalytics(req, res) {
     try {
-
+      const { business_id, brach_id, frequency } = req.query;
+  
+      if (business_id && brach_id) {
+        // Get total review count and average rating
+        const [statsResult] = await db.query(
+          `SELECT 
+              COUNT(*) AS total_reviews,
+              AVG(rating) AS average_rating
+           FROM review 
+           WHERE user_id = ? AND qr_code_id = ?`,
+          [business_id, brach_id]
+        );
+  
+        // Get last 2 reviews
+        const [lastTwoReviews] = await db.query(
+          `SELECT * FROM review 
+           WHERE user_id = ? AND qr_code_id = ? 
+           ORDER BY created_at DESC 
+           LIMIT 2`,
+          [business_id, brach_id]
+        );
+  
+        // Determine group by based on frequency
+        let groupByClause = "DATE(created_at)";
+        if (frequency === "monthly") groupByClause = "DATE_FORMAT(created_at, '%Y-%m')";
+        else if (frequency === "yearly") groupByClause = "YEAR(created_at)";
+  
+        // Get sentiment breakdown
+        const [sentimentStats] = await db.query(
+          `SELECT 
+              ${groupByClause} as period,
+              SUM(CASE WHEN rating >= 4 THEN 1 ELSE 0 END) AS positive_reviews,
+              SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) AS neutral_reviews,
+              SUM(CASE WHEN rating <= 2 THEN 1 ELSE 0 END) AS negative_reviews
+           FROM review
+           WHERE user_id = ? AND qr_code_id = ?
+           GROUP BY period
+           ORDER BY period DESC`,
+          [business_id, brach_id]
+        );
+  
+        return res.json({
+          success: true,
+          // stats: statsResult[0],
+          // last_two_reviews: lastTwoReviews,
+          sentiment_trends: sentimentStats
+        });
+      }
+  
+      if (business_id) {
+        const [qrResult] = await db.query(
+          "SELECT headline, id FROM qr_code WHERE user_id = ?",
+          [business_id]
+        );
+        return res.json({
+          success: true,
+          qr_codes: qrResult
+        });
+      }
+  
+      const [companyResult] = await db.query("SELECT business_name, id FROM company");
+      return res.json({
+        success: true,
+        companies: companyResult
+      });
+  
     } catch (error) {
       return res.status(500).json({
         success: false,
-        message: "An error occurred while fetching companies.",
-        error: error.message,
+        message: "An error occurred while fetching data.",
+        error: error.message
       });
     }
   }
+  
+  
 
 }
 
