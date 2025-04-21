@@ -9,6 +9,7 @@ import createCompany from "./Routers/companyRouter.js";
 import googleRouter from "./Routers/googleRouter.js";
 import reviewRouter from "./Routers/reviewRouter.js";
 import reviewCustomRouter from "./Routers/reviewCustomRouter.js";
+import review_analysisRouter from "./Routers/review_analysisRouter.js";
 
 
 const router = Router();
@@ -22,6 +23,7 @@ router.use("/api", createCompany);
 router.use("/api", googleRouter);
 router.use("/api", reviewRouter);
 router.use("/api", reviewCustomRouter);
+router.use("/api", review_analysisRouter);
 
 
 export default router;
