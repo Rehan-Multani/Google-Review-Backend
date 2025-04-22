@@ -71,7 +71,7 @@ class QRCodeController {
   // new code
   static async createQRCode(req, res) {
     try {
-      const { user_id, url, headline, footer, size, qr_color, offer, place_id } = req.body;
+      const { user_id, url, headline, footer, size, qr_color, offer, place_id, location } = req.body;
 
       let imageUrl = "";
 
@@ -104,6 +104,7 @@ class QRCodeController {
         size,
         qr_color,
         offer,
+        location,
         place_id,
         image: imageUrl  // Save to `image` column in DB
       };
@@ -132,7 +133,7 @@ class QRCodeController {
 
       // Fetch all company data matching the user_id from the qr_code table
       const [companyData] = await db.query(
-        `SELECT * FROM qr_code WHERE id = ?`,
+        `SELECT * FROM qr_code WHERE user_id = ?`,
         [user_id]  // The user_id is used to match company_id
       );
 
@@ -147,12 +148,18 @@ class QRCodeController {
       const [response] = await db.query(`SELECT first_name, last_name ,email FROM company WHERE id=?`, [user_id]);
       console.log("response", response);
 
+      const [banner] = await db.query(`SELECT image, user_id,qr_code_id FROM banner WHERE user_id=?`, [user_id]);
+      console.log("banner", banner);
+
       // Combine all companyData records with the user data
+      // Combine all companyData records with the user data and banner image
       const combinedData = companyData.map(item => ({
         ...item, // Spread the companyData to include all fields
-        name: ` ${response[0].first_name} ${response[0].last_name}`, // Add user name
-        email: response[0].email // Add user email
+        name: `${response[0].first_name} ${response[0].last_name}`, // Add user name
+        email: response[0].email, // Add user email
+        image: banner[0]?.image || null // Add banner image, handle if banner is missing
       }));
+
 
       return res.status(200).json({
         success: true,
