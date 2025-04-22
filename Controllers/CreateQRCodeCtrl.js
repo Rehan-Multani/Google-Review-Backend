@@ -148,7 +148,10 @@ class QRCodeController {
       const [response] = await db.query(`SELECT first_name, last_name ,email FROM company WHERE id=?`, [user_id]);
       console.log("response", response);
 
-      const [banner] = await db.query(`SELECT image, user_id,qr_code_id FROM banner WHERE user_id=?`, [user_id]);
+      const [qr_code] = await db.query(`SELECT image, user_id, id AS qr_code_id FROM qr_code WHERE user_id=?`, [user_id]);
+      console.log("qr_code", qr_code);
+
+      const [banner] = await db.query(`SELECT image, user_id, qr_code_id FROM banner WHERE user_id=? AND qr_code_id = ?`, [qr_code[0].user_id, qr_code[0].qr_code_id]);
       console.log("banner", banner);
 
       // Combine all companyData records with the user data
@@ -236,7 +239,7 @@ class QRCodeController {
       }
 
       const result = await QRCodeable.delete(id);
-
+      await db.query("DELETE FROM banner WHERE qr_code_id = ? ", [id])
       if (result.affectedRows > 0) {
         return res.status(200).json({
           success: true,
