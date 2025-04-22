@@ -3,6 +3,7 @@ import db from "../Config/Connection.js"
 import bcrypt from 'bcrypt';
 
 const company = new Controllers("company");
+const business_name = new Controllers("qr_code");
 import cloudinary from '../Config/cloudinary.js';
 
 
@@ -125,26 +126,46 @@ class companyController {
   static async getCompanyById(req, res) {
     try {
       const { id } = req.params;
-
+  
       if (!id) {
         return res.status(400).json({ error: "Company ID is required." });
       }
-
+  
       const companyData = await company.getById(id);
-
+  
       if (!companyData) {
         return res.status(404).json({ message: "Company not found." });
       }
-
+  
+      const user_id = companyData.id;
+  
+      const [businessReviews] = await db.query("SELECT * FROM review WHERE user_id = ?", [user_id]);
+  
+      const totalReviews = businessReviews.length;
+      const averageRating = totalReviews > 0
+        ? parseFloat((businessReviews.reduce((acc, review) => acc + Number(review.rating || 0), 0) / totalReviews).toFixed(1))
+        : 0;
+  
+      // Get recent 2 reviews (sorted by created_at descending)
+      const recentReviews = businessReviews
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 2);
+  
       return res.status(200).json({
         success: true,
         message: "Company fetched successfully",
         data: companyData,
+        totalReviews,
+        averageRating,
+        recentReviews
       });
+  
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
+  
+  
 
 
   static async deleteCompany(req, res) {
@@ -202,7 +223,7 @@ class companyController {
   static async getCompanyDetails(req, res) {
     try {
       const { business_id, brach_id } = req.query;
-  
+
       // Check if both IDs are provided
       if (business_id && brach_id) {
         // Get total review count and average rating
@@ -214,7 +235,7 @@ class companyController {
            WHERE user_id = ? AND qr_code_id = ?`,
           [business_id, brach_id]
         );
-  
+
         // Get last 2 reviews by created_at
         const [lastTwoReviews] = await db.query(
           `SELECT * FROM review 
@@ -223,34 +244,34 @@ class companyController {
            LIMIT 2`,
           [business_id, brach_id]
         );
-  
+
         return res.json({
           success: true,
           stats: statsResult[0],
           last_two_reviews: lastTwoReviews
         });
       }
-  
+
       // If only business_id is provided, return its QR codes
       if (business_id) {
         const [qrResult] = await db.query(
           "SELECT headline, id FROM qr_code WHERE user_id = ?",
           [business_id]
         );
-  
+
         return res.json({
           success: true,
           qr_codes: qrResult
         });
       }
-  
+
       // If neither, return companies list
       const [companyResult] = await db.query("SELECT business_name, id FROM company");
       return res.json({
         success: true,
         companies: companyResult
       });
-  
+
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -262,7 +283,7 @@ class companyController {
   static async getCompanyDetailsforSentimentAnalytics(req, res) {
     try {
       const { business_id, brach_id, frequency } = req.query;
-  
+
       if (business_id && brach_id) {
         // Get total review count and average rating
         const [statsResult] = await db.query(
@@ -273,7 +294,7 @@ class companyController {
            WHERE user_id = ? AND qr_code_id = ?`,
           [business_id, brach_id]
         );
-  
+
         // Get last 2 reviews
         const [lastTwoReviews] = await db.query(
           `SELECT * FROM review 
@@ -282,12 +303,12 @@ class companyController {
            LIMIT 2`,
           [business_id, brach_id]
         );
-  
+
         // Determine group by based on frequency
         let groupByClause = "DATE(created_at)";
         if (frequency === "monthly") groupByClause = "DATE_FORMAT(created_at, '%Y-%m')";
         else if (frequency === "yearly") groupByClause = "YEAR(created_at)";
-  
+
         // Get sentiment breakdown
         const [sentimentStats] = await db.query(
           `SELECT 
@@ -301,7 +322,7 @@ class companyController {
            ORDER BY period DESC`,
           [business_id, brach_id]
         );
-  
+
         return res.json({
           success: true,
           // stats: statsResult[0],
@@ -309,7 +330,7 @@ class companyController {
           sentiment_trends: sentimentStats
         });
       }
-  
+
       if (business_id) {
         const [qrResult] = await db.query(
           "SELECT headline, id FROM qr_code WHERE user_id = ?",
@@ -320,13 +341,13 @@ class companyController {
           qr_codes: qrResult
         });
       }
-  
+
       const [companyResult] = await db.query("SELECT business_name, id FROM company");
       return res.json({
         success: true,
         companies: companyResult
       });
-  
+
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -335,8 +356,8 @@ class companyController {
       });
     }
   }
-  
-  
+
+
 
 }
 

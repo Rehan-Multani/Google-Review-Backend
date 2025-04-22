@@ -11,7 +11,8 @@ cloudinary.config({
 });
 
 const userTable = new Controllers("users");
-const groupTable = new Controllers("groups");
+const groupTable = new Controllers("`groups`");
+
 const companyTable = new Controllers("company");
 
 class UserController {
