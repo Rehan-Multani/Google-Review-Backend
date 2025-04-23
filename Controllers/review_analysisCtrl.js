@@ -94,15 +94,14 @@ class review_analysisController {
 
   static async createreview_servay(req, res) {
     try {
-      const { survey_review, review_id, user_id, qr_code_id } = req.body;
+      const { survey_review, user_id, qr_code_id } = req.body;
 
-      if (!survey_review || !review_id || !user_id || !qr_code_id) {
+      if (!survey_review || !user_id || !qr_code_id) {
         return res.status(400).json({ error: "All fields are required." });
       }
 
       const result = await servay_reviews.create({
         survey_review: JSON.stringify(survey_review),
-        review_id,
         user_id,
         qr_code_id,
       });
