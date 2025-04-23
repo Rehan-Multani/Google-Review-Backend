@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // ✅ File upload middleware with safe temp folder
 app.use(fileUpload({
   useTempFiles: true,
-  tempFileDir: tempDir
+  // tempFileDir: tempDir
 }));
 
 // ✅ Static file directories
