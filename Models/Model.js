@@ -12,8 +12,7 @@ class BaseModel {
 
   async getById(id) {
     const [rows] = await db.query(`SELECT * FROM ${this.tableName} WHERE id = ?`, [id]);
-    console.log("rows",rows);
-    return rows.length > 0 ? rows[0] : null;
+      return rows.length > 0 ? rows[0] : null;
   }
 
   async getByGroupId(groupId) {

@@ -285,5 +285,4 @@ class QRCodeController {
 }
 
 
-
 export default QRCodeController;
