@@ -57,10 +57,10 @@ class review_analysisController {
 
   static async createReviewAnalysis(req, res) {
     try {
-      const { problems, sentiment, solutions, user_id, qr_code_id } = req.body;
+      const { problems, sentiment, solutions, user_id, qr_code_id ,review_id} = req.body;
 
       // Validate input data
-      if (!problems || !sentiment || !solutions || !user_id || !qr_code_id) {
+      if (!problems || !sentiment || !solutions || !user_id || !qr_code_id|| !review_id) {
         return res.status(400).json({ error: "All fields are required." });
       }
 
@@ -73,6 +73,7 @@ class review_analysisController {
         solutions: JSON.stringify(solutions),
         user_id,
         qr_code_id,
+        review_id
       });
 
       if (result) {

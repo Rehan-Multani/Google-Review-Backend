@@ -286,7 +286,7 @@ class reviewController {
               SELECT COUNT(*) AS total 
               FROM review WHERE user_id= ?
           `;
-      const [totalResult] = await db.query(totalQuery,[id]);
+      const [totalResult] = await db.query(totalQuery, [id]);
       const totalReviews = totalResult[0].total;
 
       // Fetch Average Rating
@@ -294,7 +294,7 @@ class reviewController {
               SELECT AVG(rating) AS averageRating 
               FROM review WHERE user_id =  ?
           `;
-      const [avgResult] = await db.query(avgQuery,[id]);
+      const [avgResult] = await db.query(avgQuery, [id]);
       const averageRating = parseFloat(avgResult[0].averageRating || 0).toFixed(1);
 
       // Fetch Rating Distribution (5-star, 4-star, etc.)
@@ -307,19 +307,40 @@ class reviewController {
                   COUNT(CASE WHEN rating = 1 THEN 1 END) AS oneStar
               FROM review WHERE user_id =  ?
           `;
-      const [ratingDistribution] = await db.query(ratingDistributionQuery,[id]);
+      const [ratingDistribution] = await db.query(ratingDistributionQuery, [id]);
 
-      // Fetch details of the first 25 reviews (description, feedback, rating, name)
-   // Fetch details of the first 25 reviews (description, feedback, rating, name)
-const reviewDetailsQuery = `
-SELECT id, rating, feedback, created_at, name
-FROM review
-WHERE user_id =  ?
-ORDER BY created_at DESC
+      const reviewDetailsQuery = `SELECT DISTINCT 
+  r.id, r.qr_code_id, r.user_id, r.rating, r.feedback, r.created_at, r.name,
+  ra.problems, ra.solutions,ra.sentiment
+FROM review r
+LEFT JOIN review_analysis ra
+  ON r.id = ra.review_id AND r.qr_code_id = ra.qr_code_id
+WHERE r.user_id = ?
+ORDER BY r.created_at DESC
 LIMIT 25
-`;
-const [reviewDetails] = await db.query(reviewDetailsQuery, [id]);
 
+`;
+      const [rawReviews] = await db.query(reviewDetailsQuery, [id]);
+
+      // Parse problems and solutions into arrays
+      const reviewDetails = rawReviews.map((review) => ({
+        ...review,
+        problems: review.problems ? JSON.parse(review.problems) : [],
+        solutions: review.solutions ? JSON.parse(review.solutions) : []
+      }));
+      const reviewMap = new Map();
+
+      rawReviews.forEach((review) => {
+        if (!reviewMap.has(review.id)) {
+          reviewMap.set(review.id, {
+            ...review,
+            problems: review.problems ? JSON.parse(review.problems) : [],
+            solutions: review.solutions ? JSON.parse(review.solutions) : [],
+          });
+        }
+      });
+
+      const reviewDetailss = Array.from(reviewMap.values());
 
       return res.status(200).json({
         success: true,
@@ -327,8 +348,8 @@ const [reviewDetails] = await db.query(reviewDetailsQuery, [id]);
         data: {
           totalReviews,
           averageRating,
-          ratingDistribution: ratingDistribution[0], // Ensure the correct structure for distribution
-          reviews: reviewDetails
+          ratingDistribution: ratingDistribution[0],
+          reviews: reviewDetailss
         }
       });
     } catch (error) {
