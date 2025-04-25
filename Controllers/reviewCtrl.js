@@ -252,23 +252,44 @@ class reviewController {
 
       // Fetch details of the first 25 reviews (description, feedback, rating, name)
       const reviewDetailsQuery = `
-              SELECT id, rating, feedback, created_at, name
-              FROM review
-              ORDER BY created_at DESC
-              LIMIT 25
-          `;
-      const [reviewDetails] = await db.query(reviewDetailsQuery);
-
+      SELECT 
+        r.id AS review_id, 
+        r.user_id, 
+        r.qr_code_id, 
+        r.description, 
+        r.feedback,
+        r.rating,
+        r.name,
+        r.image,
+        ra.problems, 
+        ra.solutions,
+        ra.review_id,
+        ra.user_id,
+        ra.qr_code_id
+      FROM review r
+      LEFT JOIN review_analysis ra ON r.id = ra.review_id
+      ORDER BY r.created_at DESC
+      LIMIT 25
+    `;
+    
+    const [reviewDetails] = await db.query(reviewDetailsQuery);
+    
+      console.log("reviewDetails", reviewDetails);
       return res.status(200).json({
         success: true,
         message: "Dashboard data fetched successfully.",
         data: {
           totalReviews,
           averageRating,
-          ratingDistribution: ratingDistribution[0], // Ensure the correct structure for distribution
-          reviews: reviewDetails
+          ratingDistribution: ratingDistribution[0],
+          reviews: reviewDetails.map(review => ({
+            ...review,
+            problems: JSON.parse(review.problems || '[]'),
+            solutions: JSON.parse(review.solutions || '[]')
+          }))
         }
       });
+      
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -280,56 +301,60 @@ class reviewController {
 
   static async getCompanyDashboard(req, res) {
     try {
-      const { id } = req.query
+      const { id } = req.query;
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: "Missing 'id' in query parameters.",
+        });
+      }
+  
       // Fetch Total Reviews
       const totalQuery = `
-              SELECT COUNT(*) AS total 
-              FROM review WHERE user_id= ?
-          `;
+        SELECT COUNT(*) AS total 
+        FROM review 
+        WHERE user_id = ?
+      `;
       const [totalResult] = await db.query(totalQuery, [id]);
-      const totalReviews = totalResult[0].total;
-
+      const totalReviews = totalResult[0]?.total || 0;
+  
       // Fetch Average Rating
       const avgQuery = `
-              SELECT AVG(rating) AS averageRating 
-              FROM review WHERE user_id =  ?
-          `;
+        SELECT AVG(rating) AS averageRating 
+        FROM review 
+        WHERE user_id = ?
+      `;
       const [avgResult] = await db.query(avgQuery, [id]);
-      const averageRating = parseFloat(avgResult[0].averageRating || 0).toFixed(1);
-
-      // Fetch Rating Distribution (5-star, 4-star, etc.)
+      const averageRating = parseFloat(avgResult[0]?.averageRating || 0).toFixed(1);
+  
+      // Fetch Rating Distribution
       const ratingDistributionQuery = `
-              SELECT 
-                  COUNT(CASE WHEN rating = 5 THEN 1 END) AS fiveStar,
-                  COUNT(CASE WHEN rating = 4 THEN 1 END) AS fourStar,
-                  COUNT(CASE WHEN rating = 3 THEN 1 END) AS threeStar,
-                  COUNT(CASE WHEN rating = 2 THEN 1 END) AS twoStar,
-                  COUNT(CASE WHEN rating = 1 THEN 1 END) AS oneStar
-              FROM review WHERE user_id =  ?
-          `;
+        SELECT 
+          COUNT(CASE WHEN rating = 5 THEN 1 END) AS fiveStar,
+          COUNT(CASE WHEN rating = 4 THEN 1 END) AS fourStar,
+          COUNT(CASE WHEN rating = 3 THEN 1 END) AS threeStar,
+          COUNT(CASE WHEN rating = 2 THEN 1 END) AS twoStar,
+          COUNT(CASE WHEN rating = 1 THEN 1 END) AS oneStar
+        FROM review 
+        WHERE user_id = ?
+      `;
       const [ratingDistribution] = await db.query(ratingDistributionQuery, [id]);
-
-      const reviewDetailsQuery = `SELECT DISTINCT 
-  r.id, r.qr_code_id, r.user_id, r.rating, r.feedback, r.created_at, r.name,
-  ra.problems, ra.solutions,ra.sentiment
-FROM review r
-LEFT JOIN review_analysis ra
-  ON r.id = ra.review_id AND r.qr_code_id = ra.qr_code_id
-WHERE r.user_id = ?
-ORDER BY r.created_at DESC
-LIMIT 25
-
-`;
+  
+      // Fetch Review Details with Analysis
+      const reviewDetailsQuery = `
+        SELECT DISTINCT 
+          r.id, r.qr_code_id, r.user_id, r.rating, r.feedback, r.created_at, r.name,
+          ra.problems, ra.solutions, ra.sentiment
+        FROM review r
+        LEFT JOIN review_analysis ra ON r.id = ra.review_id AND r.qr_code_id = ra.qr_code_id
+        WHERE r.user_id = ?
+        ORDER BY r.created_at DESC
+        LIMIT 25
+      `;
       const [rawReviews] = await db.query(reviewDetailsQuery, [id]);
-
-      // Parse problems and solutions into arrays
-      const reviewDetails = rawReviews.map((review) => ({
-        ...review,
-        problems: review.problems ? JSON.parse(review.problems) : [],
-        solutions: review.solutions ? JSON.parse(review.solutions) : []
-      }));
+  
+      // Remove duplicates and parse JSON fields
       const reviewMap = new Map();
-
       rawReviews.forEach((review) => {
         if (!reviewMap.has(review.id)) {
           reviewMap.set(review.id, {
@@ -339,9 +364,9 @@ LIMIT 25
           });
         }
       });
-
-      const reviewDetailss = Array.from(reviewMap.values());
-
+  
+      const reviews = Array.from(reviewMap.values());
+  
       return res.status(200).json({
         success: true,
         message: "Dashboard data fetched successfully.",
@@ -349,17 +374,21 @@ LIMIT 25
           totalReviews,
           averageRating,
           ratingDistribution: ratingDistribution[0],
-          reviews: reviewDetailss
-        }
+          reviews,
+        },
       });
     } catch (error) {
+      console.error("Error in getCompanyDashboard:", error);
       return res.status(500).json({
         success: false,
         message: "An error occurred while fetching dashboard data.",
-        error: error.message
+        error: error.message,
       });
     }
   }
+  
+  
+  
 
 }
 
