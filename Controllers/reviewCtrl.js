@@ -272,9 +272,9 @@ class reviewController {
       ORDER BY r.created_at DESC
       LIMIT 25
     `;
-    
-    const [reviewDetails] = await db.query(reviewDetailsQuery);
-    
+
+      const [reviewDetails] = await db.query(reviewDetailsQuery);
+
       console.log("reviewDetails", reviewDetails);
       return res.status(200).json({
         success: true,
@@ -290,7 +290,7 @@ class reviewController {
           }))
         }
       });
-      
+
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -309,7 +309,7 @@ class reviewController {
           message: "Missing 'id' in query parameters.",
         });
       }
-  
+
       // Fetch Total Reviews
       const totalQuery = `
         SELECT COUNT(*) AS total 
@@ -318,7 +318,7 @@ class reviewController {
       `;
       const [totalResult] = await db.query(totalQuery, [id]);
       const totalReviews = totalResult[0]?.total || 0;
-  
+
       // Fetch Average Rating
       const avgQuery = `
         SELECT AVG(rating) AS averageRating 
@@ -327,7 +327,7 @@ class reviewController {
       `;
       const [avgResult] = await db.query(avgQuery, [id]);
       const averageRating = parseFloat(avgResult[0]?.averageRating || 0).toFixed(1);
-  
+
       // Fetch Rating Distribution
       const ratingDistributionQuery = `
         SELECT 
@@ -340,7 +340,7 @@ class reviewController {
         WHERE user_id = ?
       `;
       const [ratingDistribution] = await db.query(ratingDistributionQuery, [id]);
-  
+
       // Fetch Review Details with Analysis
       const reviewDetailsQuery = `
         SELECT DISTINCT 
@@ -353,7 +353,7 @@ class reviewController {
         LIMIT 25
       `;
       const [rawReviews] = await db.query(reviewDetailsQuery, [id]);
-  
+
       // Remove duplicates and parse JSON fields
       const reviewMap = new Map();
       rawReviews.forEach((review) => {
@@ -365,9 +365,9 @@ class reviewController {
           });
         }
       });
-  
+
       const reviews = Array.from(reviewMap.values());
-  
+
       return res.status(200).json({
         success: true,
         message: "Dashboard data fetched successfully.",
@@ -387,9 +387,9 @@ class reviewController {
       });
     }
   }
-  
-  
-  
+
+
+
 
 }
 
