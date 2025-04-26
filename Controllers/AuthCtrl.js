@@ -1,14 +1,26 @@
 import Controllers from "../Models/Model.js";
 import { generateToken } from "../Config/Jwt.js";
 import bcrypt from "bcrypt";
-
+import admin from 'firebase-admin';
 import cloudinary from '../Config/cloudinary.js';
+import jwt from 'jsonwebtoken';
+import { readFile } from 'fs/promises';
+import db from "../Config/Connection.js"
 
 cloudinary.config({
   cloud_name: 'dkqcqrrbp',
   api_key: '418838712271323',
   api_secret: 'p12EKWICdyHWx8LcihuWYqIruWQ'
 });
+
+const serviceAccount = JSON.parse(
+  await readFile(new URL('./firebase-service-account.json', import.meta.url))
+);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
+
 
 const userTable = new Controllers("users");
 const groupTable = new Controllers("`groups`");
@@ -17,6 +29,51 @@ const companyTable = new Controllers("company");
 
 class UserController {
 
+
+  static async signInWithGoogle(req, res) {
+    const { token } = req.body;
+
+    try {
+      // 1. Verify the token
+      const decodedToken = await admin.auth().verifyIdToken(token);
+
+      const { email, name, uid, picture } = decodedToken;
+
+      let user = await db.query("SELECT email FROM company WHERE email = ?", email)
+
+      if (!user) {
+        // 3. If not, create user
+        user = await db.query("INSERT INTO company SET ?", {
+          email,
+          name,
+          googleUid: uid,
+          image: picture
+        });
+      }
+
+      // 4. Create your own JWT
+      const appToken = jwt.sign(
+        { id: user.id, email: user.email },
+        "your_jwt_secret_key",
+        { expiresIn: "7d" }
+      );
+
+      res.json({
+        success: true,
+        token: appToken,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image
+        }
+      });
+    } catch (error) {
+      console.error("Error verifying Google token:", error);
+      res.status(401).json({ success: false, message: "Invalid Token" });
+    }
+  }
+  
   static async getallUser(req, res) {
     try {
       const result = await userTable.getAll();
@@ -34,21 +91,20 @@ class UserController {
     }
   }
 
-
   static async getUserById(req, res) {
     try {
       const { id } = req.params;
-  
+
       if (!id) {
         return res.status(400).json({ error: "User ID is required." });
       }
-  
+
       const user = await userTable.getById(id);
-  
+
       if (!user) {
         return res.status(404).json({ message: "User not found." });
       }
-  
+
       return res.status(200).json({
         success: true,
         message: "User fetched successfully",
@@ -58,16 +114,15 @@ class UserController {
       return res.status(500).json({ error: error.message });
     }
   }
-  
 
 
   static async getAllGroup(req, res) {
     try {
       const groupId = 2;
       const result = await userTable.getByGroupId(groupId); // ⬅️ use new method
-  
+
       if (result.length > 0) {
-        return res.status(200).json({ 
+        return res.status(200).json({
           success: true,
           message: "Group users fetched successfully",
           group_name: result[0].group_name, // ⬅️ get group name from first user
@@ -80,19 +135,18 @@ class UserController {
       return res.status(500).json({ error: error.message });
     }
   }
-  
 
   static async updateStatus(req, res) {
     try {
       const userId = req.params.id;
       const { status } = req.body;
-  
+
       if (!status) {
         return res.status(400).json({ message: "Status is required" });
       }
-  
+
       const result = await userTable.update(userId, { status });
-  
+
       if (result.affectedRows > 0) {
         return res.status(200).json({
           success: true,
@@ -105,8 +159,6 @@ class UserController {
       return res.status(500).json({ error: error.message });
     }
   }
-  
-  
 
   static async createUser(req, res) {
     try {
@@ -121,7 +173,7 @@ class UserController {
       if (existingUser) {
         return res.status(409).json({ error: "Email already in use." });
       }
-      
+
       let imageUrl = "";
 
       // Check if image is uploaded
@@ -155,18 +207,17 @@ class UserController {
       res.status(500).json({ error: error.message });
     }
   }
-   
-  
+
   // old code 
 
   // static async loginUser(req, res) {
   //   try {
   //     const { email, password } = req.body;
-  
+
   //     if (!email || !password) {
   //       return res.status(400).json({ error: "All fields are required." });
   //     }
-  
+
   //     // First, check in users table
   //     const existingUser = await userTable.findEmail(email);
   //     if (existingUser) {
@@ -174,16 +225,16 @@ class UserController {
   //       if (!isPasswordValid) {
   //         return res.status(401).json({ message: "Invalid password." });
   //       }
-  
+
   //       // Block inactive admin users
   //       if (existingUser.group_id == 2 && existingUser.status == 0) {
   //         return res.status(403).json({ message: "Your account is inactive. Please contact superadmin." });
   //       }
-  
+
   //       const find_groupName = await groupTable.getById(existingUser.group_id);
   //       const group_name = find_groupName?.group_name || "";
-        
-  
+
+
   //       return res.status(200).json({
   //         success: true,
   //         message: "Login successful",
@@ -204,12 +255,12 @@ class UserController {
   //       if (!companyUser) {
   //         return res.status(409).json({ message: "No account found with this email." });
   //       }
-  
+
   //       const isPasswordValid = await bcrypt.compare(password, companyUser.password);
   //       if (!isPasswordValid) {
   //         return res.status(401).json({ message: "Invalid password." });
   //       }
-  
+
   //       return res.status(200).json({
   //         success: true,
   //         message: "Login successful",
@@ -230,7 +281,7 @@ class UserController {
   //     console.error("Login Error:", error);
   //     return res.status(500).json({ error: error.message });
   //   }
-    
+
   // }
 
 
@@ -241,11 +292,11 @@ class UserController {
   static async loginUser(req, res) {
     try {
       const { email, password } = req.body;
-  
+
       if (!email || !password) {
         return res.status(400).json({ error: "All fields are required." });
       }
-  
+
       // First, check in users table
       const existingUser = await userTable.findEmail(email);
       if (existingUser) {
@@ -253,10 +304,10 @@ class UserController {
         if (!isPasswordValid) {
           return res.status(401).json({ message: "Invalid password." });
         }
-  
+
         const find_groupName = await groupTable.getById(existingUser.group_id);
         const group_name = find_groupName?.group_name || "";
-  
+
         return res.status(200).json({
           success: true,
           message: "Login successful",
@@ -277,17 +328,17 @@ class UserController {
         if (!companyUser) {
           return res.status(409).json({ message: "No account found with this email." });
         }
-  
+
         const isPasswordValid = await bcrypt.compare(password, companyUser.password);
         if (!isPasswordValid) {
           return res.status(401).json({ message: "Invalid password." });
         }
-  
+
         // Check if company account is active (status == 1)
         if (companyUser.status == 0) {
           return res.status(403).json({ message: "Your company account is inactive. Please contact support." });
         }
-  
+
         return res.status(200).json({
           success: true,
           message: "Login successful",
@@ -309,10 +360,6 @@ class UserController {
       return res.status(500).json({ error: error.message });
     }
   }
-  
-
-
-     
 
   static async editUser(req, res) {
     try {
@@ -367,13 +414,13 @@ class UserController {
   static async deleteUser(req, res) {
     try {
       const { id } = req.params;
-  
+
       if (!id) {
         return res.status(400).json({ error: "User ID is required." });
       }
-  
+
       const result = await userTable.delete(id); // no destructuring
-  
+
       if (result.affectedRows > 0) {
         return res.status(200).json({
           success: true,
@@ -389,6 +436,8 @@ class UserController {
       return res.status(500).json({ error: error.message });
     }
   }
+
+
 
 }
 

@@ -20,7 +20,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // ✅ Safe temp dir path for file uploads (cross-platform)
-const tempDir = path.join(__dirname, "tmp");
+// const tempDir = path.join(__dirname, "tmp");
 
 // ✅ Create Express app
 const app = express();

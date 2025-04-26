@@ -57,10 +57,10 @@ class review_analysisController {
 
   static async createReviewAnalysis(req, res) {
     try {
-      const { problems, sentiment, solutions, user_id, qr_code_id ,review_id} = req.body;
+      const { problems, sentiment, solutions, user_id, qr_code_id, review_id } = req.body;
 
       // Validate input data
-      if (!problems || !sentiment || !solutions || !user_id || !qr_code_id|| !review_id) {
+      if (!problems || !sentiment || !solutions || !user_id || !qr_code_id || !review_id) {
         return res.status(400).json({ error: "All fields are required." });
       }
 
@@ -95,9 +95,14 @@ class review_analysisController {
 
   static async createreview_servay(req, res) {
     try {
-      const { survey_review, user_id, qr_code_id } = req.body;
+      const { survey_review, user_id, qr_code_id,human_message } = req.body;
 
-      if (!survey_review || !user_id || !qr_code_id) {
+      const [existingServay] = await db.query("SELECT * FROM review_survey WHERE user_id = ? AND qr_code_id = ? ", [user_id, qr_code_id])
+     console.log(existingServay);
+      if (existingServay.length > 0) {
+        return res.status(409).json("For this buisness you already created a servay form")
+      }
+      if (!survey_review || !user_id || !qr_code_id || !human_message) {
         return res.status(400).json({ error: "All fields are required." });
       }
 
@@ -105,6 +110,7 @@ class review_analysisController {
         survey_review: JSON.stringify(survey_review),
         user_id,
         qr_code_id,
+        human_message
       });
 
       if (result) {
@@ -125,40 +131,44 @@ class review_analysisController {
   }
   static async getreview_servay(req, res) {
     try {
-      const { id } = req.query;
-  
-      if (id) {
-        let result = await servay_reviews.getById(id); // or .findByPk(id) for Sequelize, .findById(id) for Mongoose
-        
-        if (result?.survey_review) {
-          result.survey_review = JSON.parse(result.survey_review);
-        }
-  
+      const { user_id, qr_code_id } = req.query;
+
+      if (user_id && qr_code_id) {
+        let [result] = await db.query(
+          "SELECT * FROM review_survey WHERE user_id = ? AND qr_code_id = ?",
+          [user_id, qr_code_id]
+        );
+
+        result = result.map((e) => ({
+          ...e,
+          survey_review: e.survey_review ? JSON.parse(e.survey_review) : null,
+        }));
+
         return res.status(200).json({
           success: true,
           message: "Review survey fetched successfully",
           data: result,
         });
       } else {
-        let result = await servay_reviews.getAll(); // or .find() for Mongoose
-  
+        let result = await servay_reviews.getAll();
+
         result = result.map((item) => ({
           ...item,
           survey_review: item.survey_review ? JSON.parse(item.survey_review) : null,
         }));
-  
+
         return res.status(200).json({
           success: true,
           message: "All review surveys fetched successfully",
           data: result,
         });
       }
-  
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
-  
+
+
 }
 
 export default review_analysisController;

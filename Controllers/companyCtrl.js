@@ -197,7 +197,6 @@ class companyController {
     }
   }
 
-
   static async getCompanyById(req, res) {
     try {
       const { id } = req.params;
@@ -240,9 +239,6 @@ class companyController {
     }
   }
   
-  
-
-
   static async deleteCompany(req, res) {
     try {
       const { id } = req.params;
@@ -355,6 +351,7 @@ class companyController {
       });
     }
   }
+
   static async getCompanyDetailsforSentimentAnalytics(req, res) {
     try {
       const { business_id, brach_id, frequency } = req.query;

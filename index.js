@@ -20,18 +20,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // ✅ Safe temp dir path for file uploads (cross-platform)
-const tempDir = path.join(__dirname, "tmp");
 
 // ✅ Create Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ✅ CORS setup
-app.use(cors({
-  origin: "*", // Or restrict to specific domain
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+app.use(cors({origin:"*"}));
 
 // ✅ Parse JSON and large payloads
 app.use(express.json({ limit: '50mb' }));
@@ -40,7 +35,6 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 // ✅ File upload middleware with safe temp folder
 app.use(fileUpload({
   useTempFiles: true,
-  tempFileDir: tempDir
 }));
 
 // ✅ Static file directories
