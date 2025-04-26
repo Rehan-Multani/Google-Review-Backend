@@ -4,8 +4,10 @@ import bcrypt from "bcrypt";
 import admin from 'firebase-admin';
 import cloudinary from '../Config/cloudinary.js';
 import jwt from 'jsonwebtoken';
-import { readFile } from 'fs/promises';
-import db from "../Config/Connection.js"
+import db from "../Config/Connection.js";
+
+import dotenv from 'dotenv';
+dotenv.config();  // Load environment variables
 
 cloudinary.config({
   cloud_name: 'dkqcqrrbp',
@@ -13,45 +15,53 @@ cloudinary.config({
   api_secret: 'p12EKWICdyHWx8LcihuWYqIruWQ'
 });
 
-const serviceAccount = JSON.parse(
-  await readFile(new URL('./firebase-service-account.json', import.meta.url))
-);
+// Decode base64 service account
+const serviceAccountBase64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+if (!serviceAccountBase64) {
+  throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 not found in environment variables');
+}
+const serviceAccountJson = JSON.parse(Buffer.from(serviceAccountBase64, 'base64').toString('utf-8'));
 
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert(serviceAccountJson)
 });
-
 
 const userTable = new Controllers("users");
 const groupTable = new Controllers("`groups`");
-
 const companyTable = new Controllers("company");
 
 class UserController {
-
 
   static async signInWithGoogle(req, res) {
     const { token } = req.body;
 
     try {
-      // 1. Verify the token
       const decodedToken = await admin.auth().verifyIdToken(token);
-
+      console.log("decodedToken", decodedToken);
       const { email, name, uid, picture } = decodedToken;
 
-      let user = await db.query("SELECT email FROM company WHERE email = ?", email)
+      let [user] = await db.query("SELECT * FROM company WHERE email = ?", [email]);
 
       if (!user) {
-        // 3. If not, create user
-        user = await db.query("INSERT INTO company SET ?", {
+        console.log("user not found, creating new...");
+        const insertResult = await db.query("INSERT INTO company SET ?", {
           email,
           name,
           googleUid: uid,
           image: picture
         });
+
+        // Insert ke baad id lena
+        const insertedId = insertResult.insertId;
+
+        user = {
+          id: insertedId,
+          email,
+          name,
+          image: picture
+        };
       }
 
-      // 4. Create your own JWT
       const appToken = jwt.sign(
         { id: user.id, email: user.email },
         "your_jwt_secret_key",
@@ -73,7 +83,6 @@ class UserController {
       res.status(401).json({ success: false, message: "Invalid Token" });
     }
   }
-  
   static async getallUser(req, res) {
     try {
       const result = await userTable.getAll();
