@@ -479,8 +479,6 @@ class companyController {
     }
   }
 
-
-
 }
 
 
