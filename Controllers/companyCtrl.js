@@ -170,6 +170,7 @@ class companyController {
       });
     }
   }
+
   static async getallCompany(req, res) {
     try {
       const result = await company.getAll();
@@ -265,6 +266,55 @@ class companyController {
     }
   }
 
+
+  static async editCompany(req, res) {
+    try {
+      const { id } = req.params;
+      const { name, email, phone, password } = req.body;
+
+      if (!id) {
+        return res.status(400).json({ error: "User ID is required." });
+      }
+
+      if (!name && !email && !password && !req.files?.image) {
+        return res.status(400).json({ error: "At least one field is required to update." });
+      }
+
+      const existingUser = await userTable.getById(id);
+      if (!existingUser) {
+        return res.status(404).json({ message: "User not found." });
+      }
+      const hashedPassword = bcrypt.hash(password, 10)
+      const updatedData = {};
+      if (name) updatedData.name = name;
+      if (email) updatedData.email = email;
+      if (phone) updatedData.phone = phone;
+      if (password) {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        updatedData.password = hashedPassword;
+      }
+
+      // Cloudinary image upload
+      if (req.files && req.files.image) {
+        const file = req.files.image;
+        const cloudResult = await cloudinary.uploader.upload(file.tempFilePath);
+        updatedData.image = cloudResult.secure_url;
+      }
+
+      const result = await userTable.update(id, updatedData);
+
+      if (result.affectedRows === 0) {
+        return res.status(400).json({ message: "User not updated. Please try again." });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "User updated successfully",
+      });
+    } catch (error) {
+      return res.status(500).json({ error: error.message });
+    }
+  }
 
   static async updateCompanyStatus(req, res) {
     try {
