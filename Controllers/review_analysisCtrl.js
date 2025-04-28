@@ -98,7 +98,7 @@ class review_analysisController {
       const { survey_review, user_id, qr_code_id } = req.body;
 
       const [existingServay] = await db.query("SELECT * FROM review_survey WHERE user_id = ? AND qr_code_id = ? ", [user_id, qr_code_id])
-     console.log(existingServay);
+      console.log(existingServay);
       if (existingServay.length > 0) {
         return res.status(409).json("For this buisness you already created a servay form")
       }
@@ -136,10 +136,12 @@ class review_analysisController {
         let [result] = await db.query(
           "SELECT * FROM review_survey WHERE user_id = ? AND qr_code_id = ?",
           [user_id, qr_code_id]
-        );
-
+        );  
+        let [ress] = await db.query("SELECT * FROM qr_code WHERE id = ? ", [qr_code_id[0]])
+        console.log(ress);
         result = result.map((e) => ({
           ...e,
+          language: ress[0].language,
           survey_review: e.survey_review ? JSON.parse(e.survey_review) : null,
         }));
 

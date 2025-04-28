@@ -345,7 +345,7 @@ class reviewController {
       const reviewDetailsQuery = `
         SELECT DISTINCT 
           r.id, r.qr_code_id, r.user_id, r.rating, r.feedback, r.created_at, r.name,
-          ra.problems, ra.solutions, ra.sentiment , ra.human_message
+          ra.problems, ra.solutions, ra.sentiment 
         FROM review r
         LEFT JOIN review_analysis ra ON r.id = ra.review_id AND r.qr_code_id = ra.qr_code_id
         WHERE r.user_id = ?
