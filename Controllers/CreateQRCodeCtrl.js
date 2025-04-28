@@ -71,7 +71,7 @@ class QRCodeController {
   // new code
   static async createQRCode(req, res) {
     try {
-      const { user_id, url, headline, footer, size, qr_color, offer, place_id, location,business_type } = req.body;
+      const { user_id, url, headline, footer, size, qr_color, offer, place_id, location,business_type,language } = req.body;
 
       let imageUrl = "";
 
@@ -107,6 +107,7 @@ class QRCodeController {
         location,
         place_id,
         business_type,
+        language,
         image: imageUrl  // Save to `image` column in DB
       };
 
