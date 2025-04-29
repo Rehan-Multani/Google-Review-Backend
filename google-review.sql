@@ -2,9 +2,9 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Apr 26, 2025 at 02:12 PM
--- Server version: 10.4.32-MariaDB
+-- Host: tramway.proxy.rlwy.net:43491
+-- Generation Time: Apr 29, 2025 at 02:28 PM
+-- Server version: 9.2.0
 -- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -18,7 +18,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `google-review`
+-- Database: `railway`
 --
 
 -- --------------------------------------------------------
@@ -28,11 +28,11 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `banner` (
-  `id` int(255) NOT NULL,
-  `user_id` int(255) NOT NULL,
-  `qr_code_id` int(255) DEFAULT NULL,
-  `image` varchar(500) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `qr_code_id` int DEFAULT NULL,
+  `image` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -42,17 +42,24 @@ CREATE TABLE `banner` (
 --
 
 CREATE TABLE `company` (
-  `id` int(255) NOT NULL,
-  `business_name` varchar(255) DEFAULT NULL,
-  `business_type` varchar(255) DEFAULT NULL,
-  `first_name` varchar(255) NOT NULL,
-  `last_name` varchar(255) NOT NULL,
-  `location` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `status` varchar(255) NOT NULL DEFAULT '1',
-  `image` varchar(500) NOT NULL
+  `id` int NOT NULL,
+  `business_name` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `business_type` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `first_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `last_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `location` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `status` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '1',
+  `image` varchar(500) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `company`
+--
+
+INSERT INTO `company` (`id`, `business_name`, `business_type`, `first_name`, `last_name`, `location`, `email`, `password`, `status`, `image`) VALUES
+(1, 'ABC Company', NULL, 'Jhon', 'doe', 'test', 'company@gmail.com', '$2b$10$sdnA1mw4N1rPimdUbE5S7.Q/0Dxlu5Awkl0otUOGW.IrM5ilDnary', '1', 'https://res.cloudinary.com/du4xmywbv/image/upload/v1745059273/dfc4fed9-6860-4843-86d3-465f452960bd_j9icd0.jpg');
 
 -- --------------------------------------------------------
 
@@ -61,13 +68,13 @@ CREATE TABLE `company` (
 --
 
 CREATE TABLE `enquiry` (
-  `id` int(255) NOT NULL,
-  `full_name` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `phone` varchar(255) NOT NULL,
-  `contact` varchar(255) NOT NULL,
-  `notes` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` int NOT NULL,
+  `full_name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `phone` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `contact` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `notes` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -77,13 +84,13 @@ CREATE TABLE `enquiry` (
 --
 
 CREATE TABLE `google_business` (
-  `id` int(11) NOT NULL,
-  `google_business_id` varchar(255) NOT NULL,
-  `qr_code_url` text DEFAULT NULL,
-  `banner_url` text NOT NULL,
-  `created` datetime DEFAULT current_timestamp(),
-  `updated` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `user_id` int(11) DEFAULT NULL
+  `id` int NOT NULL,
+  `google_business_id` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `qr_code_url` text COLLATE utf8mb4_general_ci,
+  `banner_url` text COLLATE utf8mb4_general_ci NOT NULL,
+  `created` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `user_id` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -93,9 +100,9 @@ CREATE TABLE `google_business` (
 --
 
 CREATE TABLE `groups` (
-  `id` int(11) NOT NULL,
-  `group_name` varchar(100) NOT NULL,
-  `description` text DEFAULT NULL
+  `id` int NOT NULL,
+  `group_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `description` text COLLATE utf8mb4_general_ci
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -113,16 +120,16 @@ INSERT INTO `groups` (`id`, `group_name`, `description`) VALUES
 --
 
 CREATE TABLE `plans` (
-  `id` int(11) NOT NULL,
-  `plan_name` varchar(100) NOT NULL,
-  `month_duration` int(11) NOT NULL,
-  `num_establishments` int(11) DEFAULT 1,
-  `free_trial_days` int(11) DEFAULT 0,
-  `plan_details` text DEFAULT NULL,
+  `id` int NOT NULL,
+  `plan_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `month_duration` int NOT NULL,
+  `num_establishments` int DEFAULT '1',
+  `free_trial_days` int DEFAULT '0',
+  `plan_details` text COLLATE utf8mb4_general_ci,
   `price` decimal(10,2) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  `order_id` varchar(30) NOT NULL
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `order_id` varchar(30) COLLATE utf8mb4_general_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -141,19 +148,20 @@ INSERT INTO `plans` (`id`, `plan_name`, `month_duration`, `num_establishments`, 
 --
 
 CREATE TABLE `qr_code` (
-  `id` int(255) NOT NULL,
-  `user_id` int(255) NOT NULL,
-  `url` varchar(255) NOT NULL,
-  `headline` varchar(255) NOT NULL,
-  `business_type` varchar(255) NOT NULL,
-  `location` varchar(255) NOT NULL,
-  `footer` varchar(255) NOT NULL,
-  `size` varchar(255) NOT NULL,
-  `qr_color` varchar(255) NOT NULL,
-  `offer` varchar(500) NOT NULL,
-  `place_id` varchar(255) NOT NULL,
-  `image` varchar(500) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` int NOT NULL,
+  `user_id` int NOT NULL,
+  `language` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `url` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `headline` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `business_type` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `location` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `footer` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `size` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `qr_color` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `offer` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `place_id` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `image` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -163,15 +171,15 @@ CREATE TABLE `qr_code` (
 --
 
 CREATE TABLE `review` (
-  `id` int(255) NOT NULL,
-  `user_id` int(255) DEFAULT NULL,
-  `qr_code_id` int(255) NOT NULL,
-  `description` varchar(500) DEFAULT NULL,
-  `feedback` varchar(500) DEFAULT NULL,
-  `rating` varchar(500) NOT NULL,
-  `name` varchar(255) NOT NULL DEFAULT '',
-  `image` varchar(500) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` int NOT NULL,
+  `user_id` int DEFAULT NULL,
+  `qr_code_id` int NOT NULL,
+  `description` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `feedback` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `rating` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '',
+  `image` varchar(500) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -181,16 +189,15 @@ CREATE TABLE `review` (
 --
 
 CREATE TABLE `review_analysis` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `human_message` text NOT NULL,
-  `problems` text DEFAULT NULL,
-  `sentiment` varchar(50) DEFAULT NULL,
-  `solutions` text DEFAULT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `review_id` varchar(255) NOT NULL DEFAULT '1',
-  `qr_code_id` int(11) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `id` bigint UNSIGNED NOT NULL,
+  `problems` text COLLATE utf8mb4_general_ci,
+  `sentiment` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `solutions` text COLLATE utf8mb4_general_ci,
+  `user_id` int DEFAULT NULL,
+  `review_id` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '1',
+  `qr_code_id` int DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -200,9 +207,9 @@ CREATE TABLE `review_analysis` (
 --
 
 CREATE TABLE `review_customization` (
-  `id` int(255) NOT NULL,
-  `rating_count` varchar(255) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` int NOT NULL,
+  `rating_count` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -219,10 +226,10 @@ INSERT INTO `review_customization` (`id`, `rating_count`, `created_at`) VALUES
 --
 
 CREATE TABLE `review_survey` (
-  `id` int(11) NOT NULL,
-  `survey_review` text DEFAULT NULL,
-  `user_id` int(11) DEFAULT NULL,
-  `qr_code_id` int(11) DEFAULT NULL
+  `id` int NOT NULL,
+  `survey_review` text COLLATE utf8mb4_general_ci,
+  `user_id` int DEFAULT NULL,
+  `qr_code_id` int DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -232,17 +239,17 @@ CREATE TABLE `review_survey` (
 --
 
 CREATE TABLE `users` (
-  `id` int(11) NOT NULL,
-  `name` varchar(50) NOT NULL,
-  `email` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `phone` varchar(15) DEFAULT NULL,
-  `group_id` varchar(15) DEFAULT NULL,
-  `status` varchar(255) NOT NULL DEFAULT '0',
-  `image` varchar(500) NOT NULL,
-  `googleBusinessProfile` varchar(500) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `id` int NOT NULL,
+  `name` varchar(50) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `phone` varchar(15) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `group_id` varchar(15) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `status` varchar(255) COLLATE utf8mb4_general_ci NOT NULL DEFAULT '0',
+  `image` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `googleBusinessProfile` varchar(500) COLLATE utf8mb4_general_ci NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -250,7 +257,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `password`, `phone`, `group_id`, `status`, `image`, `googleBusinessProfile`, `created_at`, `updated_at`) VALUES
-(1, 'Admin', 'admin@gmail.com', '$2b$10$3Jva2xqKcxzOsb3r.q7A1.9KKuAit48HPrBIX4MULXyVFZp9UE1vG', '0000000000', '2', '1', 'https://res.cloudinary.com/du4xmywbv/image/upload/v1745059273/dfc4fed9-6860-4843-86d3-465f452960bd_j9icd0.jpg', '', '2025-04-22 07:03:03', '2025-04-23 06:17:41');
+(1, 'Admin', 'admin@gmail.com', '$2a$12$L1oS.Dmt3yGrAYxRFpOoeuBC/LmehCq9oM77wamQszJEUxDdg4kri', '0000000000', '2', '1', 'https://res.cloudinary.com/du4xmywbv/image/upload/v1745059273/dfc4fed9-6860-4843-86d3-465f452960bd_j9icd0.jpg', '', '2025-04-22 07:03:03', '2025-04-28 07:01:26');
 
 --
 -- Indexes for dumped tables
@@ -338,73 +345,73 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `banner`
 --
 ALTER TABLE `banner`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `company`
 --
 ALTER TABLE `company`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `enquiry`
 --
 ALTER TABLE `enquiry`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `google_business`
 --
 ALTER TABLE `google_business`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `groups`
 --
 ALTER TABLE `groups`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `plans`
 --
 ALTER TABLE `plans`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `qr_code`
 --
 ALTER TABLE `qr_code`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `review`
 --
 ALTER TABLE `review`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `review_analysis`
 --
 ALTER TABLE `review_analysis`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `review_customization`
 --
 ALTER TABLE `review_customization`
-  MODIFY `id` int(255) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT for table `review_survey`
 --
 ALTER TABLE `review_survey`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
