@@ -265,6 +265,9 @@ class reviewController {
         r.image,
         ra.problems, 
         ra.solutions,
+        ra.summary,
+        ra.reply,
+        ra.emotional_tone,
         ra.review_id,
         ra.user_id,
         ra.qr_code_id
@@ -346,7 +349,7 @@ class reviewController {
       const reviewDetailsQuery = `
         SELECT DISTINCT 
           r.id, r.qr_code_id, r.user_id, r.rating, r.feedback, r.created_at, r.name,
-          ra.problems, ra.solutions, ra.sentiment 
+          ra.problems, ra.solutions, ra.sentiment , ra.summary, ra.reply, ra.emotional_tone
         FROM review r
         LEFT JOIN review_analysis ra ON r.id = ra.review_id AND r.qr_code_id = ra.qr_code_id
         WHERE r.user_id = ?
@@ -363,6 +366,8 @@ class reviewController {
             ...review,
             problems: review.problems ? JSON.parse(review.problems) : [],
             solutions: review.solutions ? JSON.parse(review.solutions) : [],
+            summary: review.summary ? review.summary : [],
+            reply: review.reply ? review.reply : [],
           });
         }
       });

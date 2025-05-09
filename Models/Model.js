@@ -12,7 +12,14 @@ class BaseModel {
 
   async getById(id) {
     const [rows] = await db.query(`SELECT * FROM ${this.tableName} WHERE id = ?`, [id]);
-      return rows.length > 0 ? rows[0] : null;
+    console.log("rows.length", rows.length);
+    console.log("rows", rows);
+    return rows.length > 0 ? rows[0] : null;
+  }
+
+  async getByBusinessId(id) {
+    const [rows] = await db.query(`SELECT * FROM ${this.tableName} WHERE qr_code_id = ?`, [id]);
+    return rows.length > 0 ? rows[0] : null;
   }
 
   async getByGroupId(groupId) {
@@ -25,13 +32,13 @@ class BaseModel {
     );
     return rows;
   }
-    
-  
+
+
   async findEmail(email) {
     const [rows] = await db.query(`SELECT * FROM ${this.tableName} WHERE email = ?`, [email]);
     return rows.length > 0 ? rows[0] : null;
   }
-  
+
   async create(data) {
     const [result] = await db.query(`INSERT INTO ${this.tableName} SET ?`, [data]);
     return result;

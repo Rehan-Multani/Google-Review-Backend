@@ -29,58 +29,17 @@ class QRCodeController {
       return res.status(500).json({ error: error.message });
     }
   }
-  //old code 
-  // static async createQRCode(req, res) {
-  //   try {
-  //     const {
-  //       user_id,
-  //       url,
-  //       headline,
-  //       footer,
-  //       size,
-  //       qr_color,
-  //       banner_path
-  //     } = req.body;
-
-  //     // if (!url || !size || !qr_color || !headline || !banner_path || !footer) {
-  //     //   return res.status(400).json({ error: "URL, size, and QR color are required." });
-  //     // }
-
-  //     const result = await QRCodeable.create({
-  //       user_id,
-  //       url,
-  //       headline,
-  //       footer,
-  //       size,
-  //       qr_color,
-  //       banner_path,
-  //     });
-
-  //     return res.status(201).json({
-  //       success: true,
-  //       message: "QR code created successfully",
-  //       data: result
-  //     });
-  //   } catch (error) {
-  //     res.status(500).json({ error: error.message });
-  //   }
-  // }
-
-
-
-  // new code
   static async createQRCode(req, res) {
     try {
-      const { user_id, url, headline, footer, size, qr_color, offer, place_id, location,business_type,language } = req.body;
+      const { user_id, url, headline, footer, size, qr_color, offer, place_id, location, business_type, language, business_rating } = req.body;
 
       let imageUrl = "";
+      let logoUrl = "";
 
+      // Upload QR code image
       if (req.files && req.files.image) {
         const imageFile = req.files.image;
-
-        console.log("Image file found:", imageFile.name);
-        console.log("tempFilePath:", imageFile.tempFilePath);
-
+        console.log("QR Image file found:", imageFile.name);
         const uploadResult = await cloudinary.uploader.upload(
           imageFile.tempFilePath,
           {
@@ -88,14 +47,26 @@ class QRCodeController {
             resource_type: "image"
           }
         );
-
-        console.log("Cloudinary uploaded URL:", uploadResult.secure_url);
-
         imageUrl = uploadResult.secure_url;
-      } else {
-        console.log("No image file uploaded.");
+        console.log("QR Image uploaded URL:", imageUrl);
       }
 
+      // Upload logo
+      if (req.files && req.files.logo) {
+        const logoFile = req.files.logo;
+        console.log("Logo file found:", logoFile.name);
+        const logoUploadResult = await cloudinary.uploader.upload(
+          logoFile.tempFilePath,
+          {
+            folder: "logos",
+            resource_type: "image"
+          }
+        );
+        logoUrl = logoUploadResult.secure_url;
+        console.log("Logo uploaded URL:", logoUrl);
+      }
+
+      // Prepare data to save
       const dataToSave = {
         user_id,
         url,
@@ -108,15 +79,18 @@ class QRCodeController {
         place_id,
         business_type,
         language,
-        image: imageUrl  // Save to `image` column in DB
+        business_rating: business_rating ? business_rating : "null",
+        image: imageUrl,
+        logo: logoUrl  // Save to `logo` column in DB
       };
 
+      // Save QR code record in DB
       const resultData = await QRCodeable.create(dataToSave);
       const inserted = await QRCodeable.getById(resultData.insertId);
 
       return res.status(201).json({
         success: true,
-        message: "QR code created successfully",
+        message: "QR code and logo created successfully",
         data: inserted
       });
 
@@ -128,6 +102,7 @@ class QRCodeController {
       });
     }
   }
+
 
   static async getByQrcode(req, res) {
     try {

@@ -121,9 +121,10 @@ class bannerController{
     
         // Perform the SQL query to fetch the banner image and offer from the qr_code table
         const [result] = await db.query(
-          `SELECT b.image, q.offer 
+          `SELECT b.image, q.offer , q.place_id
            FROM banner b
            JOIN qr_code q ON b.qr_code_id = q.id
+           AND q.user_id = b.user_id
            WHERE b.user_id = ? AND b.qr_code_id = ?`,
           [user_id, qr_code_id]
         );
@@ -142,7 +143,8 @@ class bannerController{
           message: "Banner and offer details fetched successfully",
           data: {
             image: result[0].image, // The image URL from the banner table
-            offer: result[0].offer  // The offer from the qr_code table
+            offer: result[0].offer,
+            place_id:result[0]
           }
         });
     
