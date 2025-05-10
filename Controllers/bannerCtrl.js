@@ -113,7 +113,7 @@ class bannerController{
     
         // Validate if both user_id and qr_code_id are provided
         if (!user_id || !qr_code_id) {
-          return res.status(400).json({
+          return res.status(200).json({
             success: false,
             message: "Both user_id and qr_code_id are required"
           });
@@ -129,20 +129,18 @@ class bannerController{
           [user_id, qr_code_id]
         );
     
-        // Check if data is found
         if (!result || result.length === 0) {
-          return res.status(404).json({
+          return res.status(200).json({
             success: false,
             message: "No data found for the given user_id and qr_code_id"
           });
         }
     
-        // Return the banner image and offer details in the response
         return res.status(200).json({
           success: true,
           message: "Banner and offer details fetched successfully",
           data: {
-            image: result[0].image, // The image URL from the banner table
+            image: result[0].image, 
             offer: result[0].offer,
             place_id:result[0]
           }
@@ -155,15 +153,8 @@ class bannerController{
           error: error.message || "Something went wrong"
         });
       }
-    }
-    
-  
+    } 
 }
-
-
-
-
-
 export default bannerController;
 
 
