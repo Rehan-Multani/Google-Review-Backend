@@ -3,7 +3,8 @@ import db from "../Config/Connection.js"
 import bcrypt from 'bcrypt';
 
 const company = new Controllers("company");
-const business_name = new Controllers("qr_code");
+const userTable = new Controllers("users");
+
 import cloudinary from '../Config/cloudinary.js';
 
 
@@ -161,55 +162,70 @@ class companyController {
   }
 
 
-  static async editCompany(req, res) {
+static async editCompany(req, res) {
     try {
       const { id } = req.params;
-      const { name, email, phone, password } = req.body;
-
+      const {
+        business_name,
+        email,
+        password,
+      } = req.body;
+  
       if (!id) {
-        return res.status(400).json({ error: "User ID is required." });
+        return res.status(400).json({ error: "Company ID is required." });
       }
-
-      if (!name && !email && !password && !req.files?.image) {
+  
+      if (
+        !business_name &&
+        !location &&
+        !email &&
+        !password &&
+        !req.files?.image
+      ) {
         return res.status(400).json({ error: "At least one field is required to update." });
       }
-
-      const existingUser = await userTable.getById(id);
-      if (!existingUser) {
-        return res.status(404).json({ message: "User not found." });
+  
+      // Check if company exists
+      const existingCompany = await company.getById(id);
+      if (!existingCompany) {
+        return res.status(404).json({ message: "Company not found." });
       }
-      const hashedPassword = bcrypt.hash(password, 10)
+  
+      // Prepare update data
       const updatedData = {};
-      if (name) updatedData.name = name;
+      if (business_name) updatedData.business_name = business_name;
       if (email) updatedData.email = email;
-      if (phone) updatedData.phone = phone;
+  
+      // Handle password hashing
       if (password) {
         const hashedPassword = await bcrypt.hash(password, 10);
         updatedData.password = hashedPassword;
       }
-
-      // Cloudinary image upload
+  
+      // Handle image upload
       if (req.files && req.files.image) {
         const file = req.files.image;
         const cloudResult = await cloudinary.uploader.upload(file.tempFilePath);
         updatedData.image = cloudResult.secure_url;
       }
-
-      const result = await userTable.update(id, updatedData);
-
+  
+      // Update company record
+      const result = await company.update(id, updatedData);
+  
       if (result.affectedRows === 0) {
-        return res.status(400).json({ message: "User not updated. Please try again." });
+        return res.status(400).json({ message: "Company not updated. Please try again." });
       }
-
+  
       return res.status(200).json({
         success: true,
-        message: "User updated successfully",
+        message: "Company updated successfully",
       });
+  
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
-
+  
   static async updateCompanyStatus(req, res) {
     try {
       const companyId = req.params.id;
