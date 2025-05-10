@@ -19,72 +19,42 @@ class companyController {
 
   static async createCompany(req, res) {
     try {
-      const { business_name, business_type, first_name, last_name, location, email, password } = req.body;
-
-      // // ✅ Only check for required fields
-      // if (!business_name) {
-      //   return res.status(400).json({ error: "business_name and business_type are required." });
-      // }
-
-      // ✅ Check if email exists only if email is provided
+      const { business_name, business_type, first_name, last_name, location, email, password, image } = req.body;
+  
       if (email) {
         const existingCompany = await company.findEmail(email);
         if (existingCompany) {
           return res.status(409).json({ error: "Email already exists." });
         }
       }
-
-      let imageUrl = "";
-
-      if (req.files && req.files.image) {
-        const imageFile = req.files.image;
-        console.log("✅ Image file found:", imageFile.name);
-        console.log("📂 tempFilePath:", imageFile.tempFilePath);
-
-        const uploadResult = await cloudinary.uploader.upload(
-          imageFile.tempFilePath,
-          {
-            folder: "company",
-            resource_type: "image"
-          }
-        );
-
-        console.log("✅ Cloudinary uploaded URL:", uploadResult.secure_url);
-        imageUrl = uploadResult.secure_url;
-      } else {
-        console.log("No image file uploaded.");
-      }
-
-      // ✅ Hash password only if it's provided
+  
       let hashedPassword = null;
       if (password) {
         const salt = await bcrypt.genSalt(10);
         hashedPassword = await bcrypt.hash(password, salt);
       }
-
-      // ✅ Prepare data, include only what is defined
+  
       const dataToSave = {
         business_name,
         business_type,
-        image: imageUrl,
       };
-
-
+  
       if (first_name) dataToSave.first_name = first_name;
       if (last_name) dataToSave.last_name = last_name;
       if (location) dataToSave.location = location;
       if (email) dataToSave.email = email;
       if (hashedPassword) dataToSave.password = hashedPassword;
-
+      if (image) dataToSave.image = image;
+  
       const resultData = await company.create(dataToSave);
       const inserted = await company.getById(resultData.insertId);
-
+  
       return res.status(201).json({
         success: true,
         message: "Company created successfully",
         data: inserted
       });
-
+  
     } catch (error) {
       console.log("❌ Error while creating Company:", error);
       return res.status(500).json({
@@ -93,83 +63,7 @@ class companyController {
       });
     }
   }
-
- static async createCompany(req, res) {
-    try {
-      const { business_name, business_type, first_name, last_name, location, email, password } = req.body;
-
-      // // ✅ Only check for required fields
-      // if (!business_name) {
-      //   return res.status(400).json({ error: "business_name and business_type are required." });
-      // }
-
-      // ✅ Check if email exists only if email is provided
-      if (email) {
-        const existingCompany = await company.findEmail(email);
-        if (existingCompany) {
-          return res.status(409).json({ error: "Email already exists." });
-        }
-      }
-
-      let imageUrl = "";
-
-      if (req.files && req.files.image) {
-        const imageFile = req.files.image;
-        console.log("✅ Image file found:", imageFile.name);
-        console.log("📂 tempFilePath:", imageFile.tempFilePath);
-
-        const uploadResult = await cloudinary.uploader.upload(
-          imageFile.tempFilePath,
-          {
-            folder: "company",
-            resource_type: "image"
-          }
-        );
-
-        console.log("✅ Cloudinary uploaded URL:", uploadResult.secure_url);
-        imageUrl = uploadResult.secure_url;
-      } else {
-        console.log("No image file uploaded.");
-      }
-
-      // ✅ Hash password only if it's provided
-      let hashedPassword = null;
-      if (password) {
-        const salt = await bcrypt.genSalt(10);
-        hashedPassword = await bcrypt.hash(password, salt);
-      }
-
-      // ✅ Prepare data, include only what is defined
-      const dataToSave = {
-        business_name,
-        business_type,
-        image: imageUrl,
-      };
-
-
-      if (first_name) dataToSave.first_name = first_name;
-      if (last_name) dataToSave.last_name = last_name;
-      if (location) dataToSave.location = location;
-      if (email) dataToSave.email = email;
-      if (hashedPassword) dataToSave.password = hashedPassword;
-
-      const resultData = await company.create(dataToSave);
-      const inserted = await company.getById(resultData.insertId);
-
-      return res.status(201).json({
-        success: true,
-        message: "Company created successfully",
-        data: inserted
-      });
-
-    } catch (error) {
-      console.log("❌ Error while creating Company:", error);
-      return res.status(500).json({
-        success: false,
-        error: error.message || "Something went wrong"
-      });
-    }
-  }
+  
 
   static async getallCompany(req, res) {
     try {

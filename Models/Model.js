@@ -36,7 +36,7 @@ class BaseModel {
 
   async findEmail(email) {
     const [rows] = await db.query(`SELECT * FROM ${this.tableName} WHERE email = ?`, [email]);
-    return rows.length > 0 ? rows[0] : null;
+    return rows ? rows[0] : null;
   }
 
   async create(data) {
