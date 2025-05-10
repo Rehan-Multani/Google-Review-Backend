@@ -21,41 +21,41 @@ class companyController {
   static async createCompany(req, res) {
     try {
       const { business_name, business_type, first_name, last_name, location, email, password, image } = req.body;
-  
+
       if (email) {
         const existingCompany = await company.findEmail(email);
         if (existingCompany) {
           return res.status(409).json({ error: "Email already exists." });
         }
       }
-  
+
       let hashedPassword = null;
       if (password) {
         const salt = await bcrypt.genSalt(10);
         hashedPassword = await bcrypt.hash(password, salt);
       }
-  
+
       const dataToSave = {
         business_name,
         business_type,
       };
-  
+
       if (first_name) dataToSave.first_name = first_name;
       if (last_name) dataToSave.last_name = last_name;
       if (location) dataToSave.location = location;
       if (email) dataToSave.email = email;
       if (hashedPassword) dataToSave.password = hashedPassword;
       if (image) dataToSave.image = image;
-  
+
       const resultData = await company.create(dataToSave);
       const inserted = await company.getById(resultData.insertId);
-  
+
       return res.status(201).json({
         success: true,
         message: "Company created successfully",
         data: inserted
       });
-  
+
     } catch (error) {
       console.log("❌ Error while creating Company:", error);
       return res.status(500).json({
@@ -64,7 +64,7 @@ class companyController {
       });
     }
   }
-  
+
 
   static async getallCompany(req, res) {
     try {
@@ -96,31 +96,31 @@ class companyController {
   static async getCompanyById(req, res) {
     try {
       const { id } = req.params;
-  
+
       if (!id) {
         return res.status(400).json({ error: "Company ID is required." });
       }
-  
+
       const companyData = await company.getById(id);
-  
+
       if (!companyData) {
         return res.status(404).json({ message: "Company not found." });
       }
-  
+
       const user_id = companyData.id;
-  
+
       const [businessReviews] = await db.query("SELECT * FROM review WHERE user_id = ?", [user_id]);
-  
+
       const totalReviews = businessReviews.length;
       const averageRating = totalReviews > 0
         ? parseFloat((businessReviews.reduce((acc, review) => acc + Number(review.rating || 0), 0) / totalReviews).toFixed(1))
         : 0;
-  
+
       // Get recent 2 reviews (sorted by created_at descending)
       const recentReviews = businessReviews
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 2);
-  
+
       return res.status(200).json({
         success: true,
         message: "Company fetched successfully",
@@ -129,12 +129,12 @@ class companyController {
         averageRating,
         recentReviews
       });
-  
+
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
-  
+
   static async deleteCompany(req, res) {
     try {
       const { id } = req.params;
@@ -162,7 +162,7 @@ class companyController {
   }
 
 
-static async editCompany(req, res) {
+  static async editCompany(req, res) {
     try {
       const { id } = req.params;
       const {
@@ -170,11 +170,11 @@ static async editCompany(req, res) {
         email,
         password,
       } = req.body;
-  
+
       if (!id) {
         return res.status(400).json({ error: "Company ID is required." });
       }
-  
+
       if (
         !business_name &&
         !location &&
@@ -184,48 +184,48 @@ static async editCompany(req, res) {
       ) {
         return res.status(400).json({ error: "At least one field is required to update." });
       }
-  
+
       // Check if company exists
       const existingCompany = await company.getById(id);
       if (!existingCompany) {
         return res.status(404).json({ message: "Company not found." });
       }
-  
+
       // Prepare update data
       const updatedData = {};
       if (business_name) updatedData.business_name = business_name;
       if (email) updatedData.email = email;
-  
+
       // Handle password hashing
       if (password) {
         const hashedPassword = await bcrypt.hash(password, 10);
         updatedData.password = hashedPassword;
       }
-  
+
       // Handle image upload
       if (req.files && req.files.image) {
         const file = req.files.image;
         const cloudResult = await cloudinary.uploader.upload(file.tempFilePath);
         updatedData.image = cloudResult.secure_url;
       }
-  
+
       // Update company record
       const result = await company.update(id, updatedData);
-  
+
       if (result.affectedRows === 0) {
         return res.status(400).json({ message: "Company not updated. Please try again." });
       }
-  
+
       return res.status(200).json({
         success: true,
         message: "Company updated successfully",
       });
-  
+
     } catch (error) {
       return res.status(500).json({ error: error.message });
     }
   }
-  
+
   static async updateCompanyStatus(req, res) {
     try {
       const companyId = req.params.id;
