@@ -26,7 +26,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ✅ CORS setup
-app.use(cors({origin:"*"}));
+app.use(cors({ origin: "*" }));
 
 // ✅ Parse JSON and large payloads
 app.use(express.json({ limit: '50mb' }));
@@ -54,6 +54,40 @@ app.use(bodyParser.json());
 app.use(morgan("dev"));
 
 // ✅ Your routes
+app.get("/", (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>Google Review Backend</title>
+        <style>
+          body {
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+          }
+          h1 {
+            font-size: 3rem;
+            text-align: center;
+            background-color: #ffffffaa;
+            padding: 20px 40px;
+            border-radius: 20px;
+            color: #333;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+          }
+        </style>
+      </head>
+      <body>
+        <h1>🚀 Google Review Backend is Working! 🎉</h1>
+      </body>
+    </html>
+  `);
+});
+
 app.use("/", routes);
 
 // ✅ Start the server
