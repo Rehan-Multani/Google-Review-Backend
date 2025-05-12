@@ -84,7 +84,7 @@ class reviewController {
   // without image 
   static async createReview(req, res) {
     try {
-      const { user_id, qr_code_id = null, description = null, feedback = null, rating, name, image } = req.body; // Add rating to request body
+      const { user_id, qr_code_id = null, description = null, feedback = null, rating, email, image } = req.body; // Add rating to request body
 
       // Validate rating
       if (rating < 1 || rating > 5) {
@@ -101,7 +101,7 @@ class reviewController {
         description,  // Optional value (can be null)
         feedback,     // Optional value (can be null)
         rating,       // Save the rating to the DB
-        name,
+        email,
         image: image || ""  // No image to be saved
       };
 
@@ -348,7 +348,7 @@ class reviewController {
       // Fetch Review Details with Analysis
       const reviewDetailsQuery = `
         SELECT DISTINCT 
-          r.id, r.qr_code_id, r.user_id, r.rating, r.feedback, r.created_at, r.name,
+          r.id, r.qr_code_id, r.user_id, r.rating, r.feedback, r.created_at, r.email,
           ra.problems, ra.solutions, ra.sentiment , ra.summary, ra.reply, ra.emotional_tone
         FROM review r
         LEFT JOIN review_analysis ra ON r.id = ra.review_id AND r.qr_code_id = ra.qr_code_id

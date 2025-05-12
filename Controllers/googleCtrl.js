@@ -7,6 +7,7 @@ class googleController {
   static async getPlaceId(placeName) {
     const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(placeName)}&inputtype=textquery&fields=place_id&key=${apiKey}`;
     const response = await axios.get(url);
+    // console.log("res",response);
     return response.data.candidates[0]?.place_id;
   }
 
@@ -88,7 +89,7 @@ class googleController {
       }
   
       const details = await googleController.getPlaceDetails(placeId);
-  
+  console.log("gvrfhbtfhbgv",details);
       return res.status(200).json({
         success: true,
         data: {

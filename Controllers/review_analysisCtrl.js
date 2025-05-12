@@ -57,10 +57,10 @@ class review_analysisController {
 
   static async createReviewAnalysis(req, res) {
     try {
-      const { problems, sentiment, solutions, user_id, qr_code_id, review_id, summary, reply,emotional_tone } = req.body;
+      const { problems, sentiment, solutions, user_id, qr_code_id, review_id, summary, reply, emotional_tone,rating,email } = req.body;
 
       // Validate input data
-      if (!problems || !sentiment || !solutions || !user_id || !qr_code_id || !review_id || !summary || !reply || !emotional_tone) {
+      if (!problems || !sentiment || !solutions || !user_id || !qr_code_id || !review_id || !summary || !reply || !emotional_tone || !rating || !email) {
         return res.status(400).json({ error: "All fields are required." });
       }
 
@@ -76,14 +76,18 @@ class review_analysisController {
         review_id,
         summary,
         reply,
-        emotional_tone
+        emotional_tone,
+        rating,
+        email
       });
 
       if (result) {
+
+        const data = await review_analysisTable.getById(result.insertId)
         return res.status(201).json({
           success: true,
           message: "Review analysis created successfully",
-          data: result,
+          data,
         });
       } else {
         return res.status(500).json({
